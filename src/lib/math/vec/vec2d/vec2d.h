@@ -4,7 +4,9 @@
 #include "def.h"
 #include <math.h>
 
+#ifndef DIM
 #define DIM 2
+#endif
 
 typedef real vec[DIM];
 

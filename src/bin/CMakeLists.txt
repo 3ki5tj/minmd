@@ -1,1 +1,1 @@
-add_subdirectory(md)
+add_subdirectory(md_lj)

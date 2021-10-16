@@ -1,4 +1,4 @@
-project(math)
+project(minmd_math)
 
 add_subdirectory(rng)
 add_subdirectory(vec)
@@ -16,7 +16,7 @@ set(MATH_SOURCES ${MATH_SOURCES} PARENT_SCOPE)
 # this project depends on "def"
 target_link_libraries(${PROJECT_NAME}
   INTERFACE 
-  def rng vec)
+  def rng vec -lm)
 
 # make the headers available to users of this library
 target_include_directories(${PROJECT_NAME}
