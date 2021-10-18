@@ -2,6 +2,7 @@ project(minmd_math)
 
 add_subdirectory(rng)
 add_subdirectory(vec)
+add_subdirectory(stat_accum)
 
 # INTERFACE means a library that has no real object
 add_library(${PROJECT_NAME} INTERFACE)
@@ -16,7 +17,11 @@ set(MATH_SOURCES ${MATH_SOURCES} PARENT_SCOPE)
 # this project depends on "def"
 target_link_libraries(${PROJECT_NAME}
   INTERFACE 
-  def rng vec -lm)
+  def
+  rng
+  vec
+  stat_accum
+  -lm)
 
 # make the headers available to users of this library
 target_include_directories(${PROJECT_NAME}

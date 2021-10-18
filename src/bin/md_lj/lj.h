@@ -1,7 +1,9 @@
 #ifndef LJ_H__
 #define LJ_H__
 
+
 #include "minmd_lib.h"
+
 
 
 typedef struct {
@@ -15,8 +17,10 @@ void lj_cutoff_init(lj_cutoff_t *c, real rc_def, real l)
   c->rc = (rc_def < l*0.5) ? rc_def : l*0.5;
 }
 
+
+
 typedef struct {
-  real ep, ep6, ep12;
+  real epot, epot6, epot12;
   real epot_shift;
   real epot_tail;
   real vir;
@@ -44,6 +48,29 @@ void lj_epot_data_init(lj_epot_data_t *epdata, lj_cutoff_t *cutoff, int n, real 
 #endif
 }
 
+
+typedef struct {
+  stat_accum_t *epot_acc;
+  stat_accum_t *ekin_acc;
+} lj_stat_t;
+
+
+void lj_stat_init(lj_stat_t *stat_acc)
+{
+  stat_accum_init(stat_acc->epot_acc);
+  stat_accum_init(stat_acc->ekin_acc);
+}
+
+void lj_stat_add(lj_stat_t *stat_acc,
+                 const lj_epot_data_t *epot_data,
+                 real ekin)
+{
+  stat_accum_add(stat_acc->epot_acc, epot_data->epot);
+  stat_accum_add(stat_acc->ekin_acc, ekin);
+}
+
+
+
 typedef struct {
   int dim; /* dimension, 3 or 2 */
   int n; /* number of particles */
@@ -61,6 +88,7 @@ typedef struct {
 
   lj_epot_data_t epot_data; /* potential energy data */
   real ekin; /* kinetic energy */
+  lj_stat_t stat_acc; /* statistical accumulators */
 
   rng_t *rng; /* random number generator */
 } lj_md_t;
@@ -104,8 +132,18 @@ lj_md_t *lj_md_open(int n, real rho, real rc_def)
   real tp_ref = 1;
   mdutils_init_velocities(n, lj->mass, lj->v, tp_ref, lj->rng); 
 
+  stat_accum_init(&(lj->stat_acc));
+
   return lj;
 }
+
+
+
+void lj_md_run(lj_md_t *lj, long long nsteps)
+{
+}
+
+
 
 #endif /* LJ_H__ */
 
