@@ -1,4 +1,4 @@
-#include "minmd_mdutils.h"
+#include "mdutils.h"
 
 int main(void)
 {

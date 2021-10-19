@@ -1,11 +1,13 @@
-project(minmd_mdutils)
+project(mdutils)
 
 add_library(${PROJECT_NAME} INTERFACE)
 
 # define the module's dependences
 target_link_libraries(${PROJECT_NAME}
   INTERFACE
-  def rng minmd_utils)
+  def
+  rng
+  utils)
 
 # make this module's headers available to other modules
 target_include_directories(${PROJECT_NAME}
@@ -14,6 +16,6 @@ target_include_directories(${PROJECT_NAME}
 )
 
 # test program
-add_executable(test_mdutils test.c)
-target_link_libraries(test_mdutils ${PROJECT_NAME} -lm)
+add_executable(test_${PROJECT_NAME} test.c)
+target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} -lm)
 

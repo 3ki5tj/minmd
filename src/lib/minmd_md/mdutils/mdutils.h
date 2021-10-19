@@ -3,7 +3,7 @@
 
 #include "def.h"
 #include "rng.h"
-#include "minmd_utils.h"
+#include "utils.h"
 
 #ifdef MINMD_2D
 

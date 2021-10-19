@@ -9,15 +9,16 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 # collect source code files and define a variable MATH_SOURCES
 # that is available to the parent directory
-file(GLOB MATH_SOURCES *.cpp)
-list(REMOVE_ITEM MATH_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
+file(GLOB MATH_SOURCES *.c *.cpp)
+#list(REMOVE_ITEM MATH_SOURCES
+#    ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
+list(FILTER MATH_SOURCES EXCLUDE REGEX test.*) # requires CMake 3.6
 set(MATH_SOURCES ${MATH_SOURCES} PARENT_SCOPE)
+message("\n\nMATH_SOURCES ${MATH_SOURCES}\n\n")
 
-# this project depends on "def"
+
 target_link_libraries(${PROJECT_NAME}
   INTERFACE 
-  def
   rng
   vec
   stat_accum
@@ -30,8 +31,8 @@ target_include_directories(${PROJECT_NAME}
   )
 
 # for building test_math
-add_executable(test_math test.cpp ${MATH_SOURCES})
-target_link_libraries(test_math PRIVATE def)
+add_executable(test_${PROJECT_NAME} test.cpp ${MATH_SOURCES})
+target_link_libraries(test_${PROJECT_NAME} PRIVATE ${PROJECT_NAME})
 #
 # Since `math` is an interface library,
 # the library contains no binary objects

@@ -1,8 +1,7 @@
 #ifndef STAT_ACCUM_H__
 #define STAT_ACCUM_H__
 
-#include "def.h"
-#include "minmd_utils.h"
+#include "minmd_basic.h"
 #include <math.h>
 
 

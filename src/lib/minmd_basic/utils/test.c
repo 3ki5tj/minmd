@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "minmd_utils.h"
+#include "utils.h"
 
 int main(void)
 {
