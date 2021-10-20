@@ -4,8 +4,9 @@ A minimalist molecular dynamics (MD) simulation package.
 
 ## Overview
 
-We wish to write a minimalist and yet self-contained molecular dynamics code.
-We hope that such a minimal codebase would help students under key aspect of various MD algorithms.
+Our aim is to write a simplest molecular dynamics program that helps people
+understand the main logic behind various MD algorithms.
+We wish to keep the code as simple as possible and the optimization is limited.
 
 ## Installation
 
@@ -13,12 +14,13 @@ Quick way of building the system:
 ```
 make
 ```
+The executables are under various binary directories, e.g. `src/bin/md_lj/md_lj`
+
 See INSTALL for more details.
 
-NOTE: the Makefiles under the `src` directory are dummy files.
-They are used only to clean up the source code, instead of building the software.
-
 ## References
+
+Various books and existing MD packages are helpful.
 
 Understanding Molecular Simulation: From Algorithms to Applications (2nd Edition)
 by Daan Frenkel and Berend Smit, Academic Press

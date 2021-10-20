@@ -1,5 +1,4 @@
 #include "softplus.h"
-#include <cmath>
 
 /* log(exp(a) + exp(b)) */
 real softplus(real a, real b)

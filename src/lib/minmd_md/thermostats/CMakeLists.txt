@@ -1,14 +1,13 @@
-project(mdutils)
+project(thermostats)
 
 add_library(${PROJECT_NAME} INTERFACE)
 
 # define the module's dependences
 target_link_libraries(${PROJECT_NAME}
   INTERFACE
-  def
   rng
   utils
-  vec)
+  mdutils)
 
 # make this module's headers available to other modules
 target_include_directories(${PROJECT_NAME}

@@ -4,6 +4,7 @@
 #include "def.h"
 #include "rng.h"
 #include "utils.h"
+#include "vec.h"
 
 #ifdef MINMD_2D
 
@@ -64,21 +65,19 @@ void mdutils_init_face_centered_lattice(int n, real side_length, real (*x)[DIM],
 /* remove the center of mass motion */
 void mdutils_remove_com(int n, const real *mass, real (*v)[DIM])
 {
-  int i, d;
-  real momentum[DIM] = {0}, total_mass = 0;
+  int i;
+  real momentum[DIM], total_mass = 0;
 
+  vec_zero(momentum);
   for (i = 0; i < n; i++) {
-    for (d = 0; d < DIM; d++) {
-      momentum[d] += mass[i] * v[i][d];
-    }
+    vec_sinc(momentum, v[i], mass[i]);
     total_mass += mass[i];
   }
 
-  for (d = 0; d < DIM; d++) {
-    momentum[d] /= total_mass;
-    for (i = 0; i < n; i++) {
-      v[i][d] -= momentum[d];
-    }
+  vec_smul(momentum, 1.0/total_mass);
+
+  for (i = 0; i < n; i++) {
+    vec_dec(v[i], momentum);
   }
 }
 
@@ -96,6 +95,26 @@ void mdutils_init_velocities(int n, const real *mass, real (*v)[DIM], real tp_re
 
   mdutils_remove_com(n, mass, v);
 }
+
+
+INLINE real mdutils_ekin(int n, const real *mass, real (*v)[DIM])
+{
+  int i;
+  double ek;
+
+  if (mass == NULL) {
+    for (i = 0; i < n; i++) {
+      ek += vec_sqr(v[i]);
+    }
+  } else {
+    for (i = 0; i < n; i++) {
+      ek += mass[i] * vec_sqr(v[i]);
+    }
+  }
+  return (real) (ek * 0.5);
+}
+
+
 
 
 #endif /* MDUTILS_H__ */

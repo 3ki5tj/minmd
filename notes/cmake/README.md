@@ -1,3 +1,11 @@
+## Source code library example
+
+In the `minmd_lib` library, we follow the policy of using header only files.
+For reference, we give in `src_lib` an example of usual library using .c and .cpp files
+See the README.md there for details.
+
+## Common ommands
+
 ### Print internal variables
 
 ```
