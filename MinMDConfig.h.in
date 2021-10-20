@@ -4,5 +4,4 @@
 
 #cmakedefine MINMD_DOUBLE
 #cmakedefine MINMD_2D
-#cmakedefine MINMD_MYMATH
 

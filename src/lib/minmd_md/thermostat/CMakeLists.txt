@@ -1,4 +1,4 @@
-project(thermostats)
+project(thermostat)
 
 add_library(${PROJECT_NAME} INTERFACE)
 

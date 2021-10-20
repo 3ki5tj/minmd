@@ -1,8 +1,8 @@
 #ifndef VEC2D_H__
 #define VEC2D_H__
 
-#include "def.h"
 #include <math.h>
+#include "rng.h"
 
 #ifndef DIM
 #define DIM 2
@@ -152,6 +152,28 @@ INLINE real *vec_wrap(real *x, real l)
 }
 
 
+INLINE real *vec_rand_gauss(real *v, real mag, rng_t *rng)
+{
+  v[0] = mag * rng_gauss(rng);
+  v[1] = mag * rng_gauss(rng);
+  return v;
+}
+
+
+INLINE real *vec_rand_dir(real *v, rng_t *rng)
+{
+  double a, b, sqr, s;
+  do {
+    a = rng_gauss(rng);
+    b = rng_gauss(rng);
+    sqr = a*a + b*b;
+  } while (sqr <= 0);
+
+  s = 1.0/sqrt(sqr);
+  v[0] = (real) (a * s);
+  v[1] = (real) (a * s);
+  return v;
+}
 
 
 #endif /* VEC2D_H__ */

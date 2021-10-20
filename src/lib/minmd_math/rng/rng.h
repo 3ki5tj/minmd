@@ -4,6 +4,7 @@
 #include "def.h"
 #include "pcg32.h"
 #include <math.h>
+#include <time.h>
 
 #define RNG_TYPE_PCG 0
 
@@ -114,24 +115,6 @@ double rng_gamma(rng_t *r, double k)
 double rng_chisqr(rng_t *r, double k)
 {
   return 2*rng_gamma(r, k*0.5);
-}
-
-/* a randomly oriented unit vector */
-double *rng_dir(rng_t *r, double *v)
-{
-  double a, b, sqr, s;
-
-  do {
-    a = 2 * rng_rand01(r) - 1;
-    b = 2 * rng_rand01(r) - 1;
-    sqr = a*a + b*b;
-  } while (sqr >= 1);
-
-  s = 2.*sqrt(1 - sqr);
-  v[0] = a * s;
-  v[1] = b * s;
-  v[2] = 1 - 2*sqr;
-  return v;
 }
 
 void rng_free(rng_t *r)

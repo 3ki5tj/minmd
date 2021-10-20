@@ -100,7 +100,7 @@ void mdutils_init_velocities(int n, const real *mass, real (*v)[DIM], real tp_re
 INLINE real mdutils_ekin(int n, const real *mass, real (*v)[DIM])
 {
   int i;
-  double ek;
+  double ek = 0;
 
   if (mass == NULL) {
     for (i = 0; i < n; i++) {

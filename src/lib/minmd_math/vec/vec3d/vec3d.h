@@ -1,8 +1,8 @@
 #ifndef VEC3D_H__
 #define VEC3D_H__
 
-#include "def.h"
 #include <math.h>
+#include "rng.h"
 
 #ifndef DIM
 #define DIM 3
@@ -164,6 +164,33 @@ INLINE real *vec_wrap(real *x, real l)
   return x;
 }
 
+
+INLINE real *vec_rand_gauss(real *v, real mag, rng_t *rng)
+{
+  v[0] = mag * rng_gauss(rng);
+  v[1] = mag * rng_gauss(rng);
+  v[2] = mag * rng_gauss(rng);
+  return v;
+}
+
+
+/* a randomly oriented unit vector */
+INLINE real *vec_rand_dir(real *v, rng_t *r)
+{
+  double a, b, sqr, s;
+
+  do {
+    a = 2 * rng_rand01(r) - 1;
+    b = 2 * rng_rand01(r) - 1;
+    sqr = a*a + b*b;
+  } while (sqr >= 1);
+
+  s = 2.*sqrt(1 - sqr);
+  v[0] = (real) (a * s);
+  v[1] = (real) (b * s);
+  v[2] = (real) (1 - 2*sqr);
+  return v;
+}
 
 
 #endif /* VEC3D_H__ */

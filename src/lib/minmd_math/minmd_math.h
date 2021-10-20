@@ -3,7 +3,6 @@
 
 #include "rng.h"
 #include "vec.h"
-#include "softplus.h"
 #include "stat_accum.h"
 
 #endif /* MINMD_MATH_H__ */

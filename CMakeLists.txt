@@ -22,8 +22,6 @@ endif()
 get_property(DIM GLOBAL PROPERTY MINMD_DIM)
 message("Working with ${DIM}-dimensional systems")
 
-option(MINMD_MYMATH "Use homemade math functions" OFF)
-
 configure_file(MinMDConfig.h.in MinMDConfig.h)
 
 add_subdirectory(src)

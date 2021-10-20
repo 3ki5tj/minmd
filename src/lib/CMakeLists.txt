@@ -4,15 +4,10 @@ add_subdirectory(minmd_basic)
 add_subdirectory(minmd_math)
 add_subdirectory(minmd_md)
 
-# LIBMINMD_SOURCES would include all modules with .c or .cpp files
-# header-only modules are excluded
-set(LIBMINMD_SOURCES)
-list(APPEND LIBMINMD_SOURCES
-  ${MATH_SOURCES}
-)
-add_library(${PROJECT_NAME} ${LIBMINMD_SOURCES})
+add_library(${PROJECT_NAME} INTERFACE)
 
 target_link_libraries(${PROJECT_NAME}
+  INTERFACE
   minmd_basic
   minmd_math
   minmd_md

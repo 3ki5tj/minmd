@@ -1,10 +1,12 @@
-add_library(vec2d INTERFACE)
-target_link_libraries(vec2d INTERFACE def)
-target_include_directories(vec2d
+project(vec2d)
+
+add_library(${PROJECT_NAME} INTERFACE)
+target_link_libraries(${PROJECT_NAME} INTERFACE rng -lm)
+target_include_directories(${PROJECT_NAME}
   INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 # test.c
-add_executable(test_vec2d test.c)
-target_link_libraries(test_vec2d PRIVATE m def)
+add_executable(test_${PROJECT_NAME} test.c)
+target_link_libraries(test_${PROJECT_NAME} PRIVATE ${PROJECT_NAME})

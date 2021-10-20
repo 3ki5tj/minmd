@@ -139,8 +139,17 @@ lj_md_t *lj_md_open(int n, real rho, real rc_def)
 
 
 
+void lj_md_step(lj_md_t *lj)
+{
+}
+
 void lj_md_run(lj_md_t *lj, long long nsteps)
 {
+  long long step;
+
+  for (step = 0; step <= nsteps; step++) {
+    lj_md_step(lj);
+  }
 }
 
 

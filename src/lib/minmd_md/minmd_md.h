@@ -2,6 +2,6 @@
 #define MINMD_MD_H__
 
 #include "mdutils.h"
-#include "thermostats.h"
+#include "thermostat.h"
 
 #endif /* MINMD_MD_H__ */
