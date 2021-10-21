@@ -1,5 +1,5 @@
-#ifndef UTIL_H__
-#define UTIL_H__
+#ifndef UTILS_H__
+#define UTILS_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,9 +27,7 @@ INLINE void *xnew_(size_t n, size_t size, const char *name)
 #define XCLONE(x, y, size) x = xclone_(y, size, #x)
 INLINE void *xclone_(void *y, size_t size, const char *name_x)
 {
-  void *x;
-
-  x = xnew_(1, size, name_x);
+  void *x = xnew_(1, size, name_x);
   memcpy(x, y, size);
 
   return x;
@@ -38,5 +36,5 @@ INLINE void *xclone_(void *y, size_t size, const char *name_x)
 
 
 
-#endif /* UTIL_H__ */
+#endif /* UTILS_H__ */
 
