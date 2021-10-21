@@ -11,7 +11,22 @@ On Ubuntu, we can install cmake by typing
 sudo apt install cmake
 ```
 
-### Building the project
+
+## Building the project
+
+### Automatical way
+
+Release version:
+```
+make
+```
+
+Debug version:
+```
+make debug
+```
+
+### Manually building the project
 
 Under the project root directory, where this file is located
 

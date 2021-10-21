@@ -8,15 +8,26 @@ Our aim is to write a simple, didactic molecular dynamics program that helps peo
 understand the main logic behind various MD algorithms.
 We wish to keep the code as simple as possible and the optimization is limited.
 
-## Installation
+## Compiling 
 
 Quick way of building the system:
 ```
 make
 ```
-The executables are under various binary directories, e.g. `src/bin/md_lj/md_lj`
+The executables are under various binary directories, e.g. `build/src/bin/md_lj/md_lj`
+
+```
+./build/src/bin/md_lj/md_lj
+```
+
+For the debug version
+```
+make debug
+valgrind ./debug/src/bin/md_lj/md_lj
+```
 
 See INSTALL for more details.
+
 
 ## References
 

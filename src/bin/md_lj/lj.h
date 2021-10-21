@@ -2,7 +2,9 @@
 #define LJ_H__
 
 
+
 #include "minmd_lib.h"
+#include "ljeos.h"
 
 
 
@@ -20,6 +22,7 @@ typedef struct {
 typedef struct {
   long long nsteps;
   int verbose;
+  int nst_print;
   int do_stat;
 } md_running_param_t;
 
@@ -66,8 +69,8 @@ void lj_epot_data_free(lj_epot_data_t *epdata)
 
 
 typedef struct {
-  stat_accum_t *epot_accum;
   stat_accum_t *ekin_accum;
+  stat_accum_t *epot_accum;
   stat_accum_t *etot_accum;
 } md_lj_stat_t;
 
@@ -76,10 +79,18 @@ md_lj_stat_t *md_lj_stat_init(void)
 {
   md_lj_stat_t *stat;
   XNEW(stat, 1);
-  stat->epot_accum = stat_accum_init();
   stat->ekin_accum = stat_accum_init();
+  stat->epot_accum = stat_accum_init();
   stat->etot_accum = stat_accum_init();
   return stat;
+}
+
+void md_lj_stat_free(md_lj_stat_t *stat)
+{
+  stat_accum_free(stat->ekin_accum);
+  stat_accum_free(stat->epot_accum);
+  stat_accum_free(stat->etot_accum);
+  free(stat);
 }
 
 void md_lj_stat_add(md_lj_stat_t *stat,
@@ -88,17 +99,9 @@ void md_lj_stat_add(md_lj_stat_t *stat,
 {
   real epot = epot_data->epot,
        etot = ekin + epot;
-  stat_accum_add(stat->epot_accum, epot);
   stat_accum_add(stat->ekin_accum, ekin);
+  stat_accum_add(stat->epot_accum, epot);
   stat_accum_add(stat->etot_accum, etot);
-}
-
-void md_lj_stat_free(md_lj_stat_t *stat)
-{
-  stat_accum_free(stat->epot_accum);
-  stat_accum_free(stat->ekin_accum);
-  stat_accum_free(stat->etot_accum);
-  free(stat);
 }
 
 
@@ -110,6 +113,7 @@ typedef struct {
   real vol;
   real l; /* box size */
   real rc;
+  real tp;
   real md_dt;
 
   real *mass; /* masses */
@@ -140,6 +144,7 @@ md_lj_t *md_lj_open(md_lj_param_t *param)
   lj->rho = param->rho;
   lj->vol = n / lj->rho;
   lj->l = pow(lj->vol, 1.0/DIM);
+  lj->tp = param->tp;
   lj->md_dt = param->md_dt;
 
   /* initialize the cutoff distance */
@@ -305,18 +310,43 @@ void md_lj_run(md_lj_t *lj, const md_running_param_t *mrp)
 {
   long long step;
 
-  for (step = 0; step < mrp->nsteps; step++) {
+  for (step = 1; step <= mrp->nsteps; step++) {
     md_lj_step(lj, mrp);
 
     if (mrp->do_stat) {
       md_lj_stat_add(lj->stat, lj->epot_data, lj->ekin);
     }
 
-    if (mrp->verbose > 1) {
+    if (mrp->verbose > 1 && step % mrp->nst_print == 0) {
       fprintf(stderr, "step %lld: ekin %g + epot %g = etot %g\n",
           step, lj->ekin, lj->epot_data->epot, lj->etot);
     }
   }
+}
+
+
+
+void md_lj_print_stat(md_lj_t *lj)
+{
+  md_lj_stat_t *stat = lj->stat;
+  int n = lj->n, n_dof = lj->n_dof;
+  double ekin_mean, ekin_std;
+  double epot_mean, epot_std;
+  double etot_mean, etot_std;
+  ekin_std = stat_accum_get_std(stat->ekin_accum, &ekin_mean);
+  epot_std = stat_accum_get_std(stat->epot_accum, &epot_mean);
+  etot_std = stat_accum_get_std(stat->etot_accum, &etot_mean);
+
+  real epot_ref, pres_ref, fex_ref, muex_ref;
+  epot_ref = ljeos3d_get(lj->rho, lj->tp, &pres_ref, &fex_ref, &muex_ref);
+
+  printf("  nsteps %lld\n"
+         "       n %d\n"
+         "      tp %g+/-%g (cf: %g)\n"
+         "  epot/n %g+/-%g (cf: %g)\n",
+      stat->ekin_accum->count, n,
+      2*ekin_mean/n_dof, 2*ekin_std/n_dof, lj->tp,
+      epot_mean/n, epot_std/n, epot_ref);
 }
 
 
