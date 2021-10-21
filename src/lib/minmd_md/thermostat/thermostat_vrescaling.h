@@ -1,5 +1,5 @@
-#ifndef VRESCALING_H__
-#define VRESCALING_H__
+#ifndef THERMOSTAT_VRESCALING_H__
+#define THERMOSTAT_VRESCALING_H__
 
 #include "utils.h"
 #include "rng.h"
@@ -10,40 +10,50 @@
 
 typedef struct {
   rng_t *rng;
-} vrescaling_param_t;
+} thermostat_vrescaling_param_t;
 
 typedef struct {
+  double halfkt; /* 0.5*kT */
   double expndt; /* exp(-dt) */
-} vrescaling_data_t;
+} thermostat_vrescaling_data_t;
 
 
-thermostat_t *vrescaling_init(thermostat_param_t *param)
+thermostat_t *thermostat_vrescaling_init(thermostat_param_t *param)
 {
   thermostat_t *ts;
-  vrescaling_data_t *vr_data;
+  thermostat_vrescaling_data_t *vr_data;
 
   XNEW(ts, 1);
   ts->type = THERMOSTAT_TYPE_VRESCALING;
-  ts->param = param;
 
+  /* clone parameters */
+  XCLONE(ts->param, param, sizeof(*param));
+  XCLONE(ts->param->algo_param, param->algo_param, sizeof(thermostat_vrescaling_param_t));
+
+  /* build data */
   XNEW(vr_data, 1);
+  vr_data->halfkt = param->boltz * param->tp;
   vr_data->expndt = exp(-param->dt);
   ts->data = vr_data;
+
   return ts;
 }
 
 
-void vrescaling_free(thermostat_t *ts)
+void thermostat_vrescaling_free(thermostat_t *ts)
 {
-  thermostat_free(ts);
+  free(ts->param->algo_param);
+  free(ts->param);
+  free(ts->data);
+  free(ts);
 }
 
 
-real vrescaling_apply(thermostat_t *ts)
+real thermostat_vrescaling_apply(thermostat_t *ts)
 {
   thermostat_param_t *tsp = ts->param;
-  vrescaling_param_t *vrp = (vrescaling_param_t *) tsp->algo_param;
-  vrescaling_data_t *vrd = (vrescaling_data_t *) ts->data;
+  thermostat_vrescaling_param_t *vrp = (thermostat_vrescaling_param_t *) tsp->algo_param;
+  thermostat_vrescaling_data_t *vrd = (thermostat_vrescaling_data_t *) ts->data;
   double dt = tsp->dt,
          c = vrd->expndt,
          ek1, ek2, s, r, r2;
@@ -66,6 +76,6 @@ real vrescaling_apply(thermostat_t *ts)
   return (real) ek2;
 }
 
-#endif /* VRESCALING_H__ */
+#endif /* THERMOSTAT_VRESCALING_H__ */
 
 

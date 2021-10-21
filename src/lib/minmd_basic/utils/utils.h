@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "def.h"
 
 #ifndef XNEW
 #define XNEW(x, n) x = xnew_(n, sizeof(*(x)), #x)
-
 INLINE void *xnew_(size_t n, size_t size, const char *name)
 {
   void *p;
@@ -19,8 +19,23 @@ INLINE void *xnew_(size_t n, size_t size, const char *name)
   }
   return p;
 }
+#endif /* defined(XNEW) */
 
-#endif
+
+
+#ifndef XCLONE
+#define XCLONE(x, y, size) x = xclone_(y, size, #x)
+INLINE void *xclone_(void *y, size_t size, const char *name_x)
+{
+  void *x;
+
+  x = xnew_(1, size, name_x);
+  memcpy(x, y, size);
+
+  return x;
+}
+#endif /* defined(XCLONE) */
+
 
 
 #endif /* UTIL_H__ */

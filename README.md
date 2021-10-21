@@ -4,7 +4,7 @@ A minimalist molecular dynamics (MD) simulation package.
 
 ## Overview
 
-Our aim is to write a simplest molecular dynamics program that helps people
+Our aim is to write a simple, didactic molecular dynamics program that helps people
 understand the main logic behind various MD algorithms.
 We wish to keep the code as simple as possible and the optimization is limited.
 

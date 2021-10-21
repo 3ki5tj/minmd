@@ -7,111 +7,146 @@
 
 
 typedef struct {
+  int n;
+  real rho;
+  real tp;
   real rc_def;
-  real rc;
-} lj_cutoff_t;
-
-void lj_cutoff_init(lj_cutoff_t *c, real rc_def, real l)
-{
-  c->rc_def = rc_def;
-  c->rc = (rc_def < l*0.5) ? rc_def : l*0.5;
-}
-
+  real md_dt;
+  int thermostat_type;
+  real vr_dt;
+} md_lj_param_t;
 
 
 typedef struct {
-  real epot, epot6, epot12;
+  long long nsteps;
+  int verbose;
+  int do_stat;
+} md_running_param_t;
+
+
+typedef struct {
+  real epot_pr, epot6, epot12;
+  real epot_shifted;
   real epot_shift;
   real epot_tail;
-  real vir;
+  real epot; /* unshifted with tail correction */
+  real virial;
   real pres;
   real pres_tail;
 } lj_epot_data_t;
 
-
-void lj_epot_data_init(lj_epot_data_t *epdata, lj_cutoff_t *cutoff, int n, real rho)
+lj_epot_data_t *lj_epot_data_init(real rc, int n, real rho)
 {
-    real rc = cutoff->rc,
-         irc = 1 / rc,
-         irc2 = irc * irc,
-         irc3 = irc2 * irc,
-         irc4 = irc2 * irc2,
-         irc6 = irc4 * irc2;
+  lj_epot_data_t *epdata;
+  XNEW(epdata, 1);
 
-    epdata->epot_shift = 4 * irc6 * (irc6 - 1);
+  real irc = 1 / rc,
+       irc2 = irc * irc,
+       irc3 = irc2 * irc,
+       irc4 = irc2 * irc2,
+       irc6 = irc4 * irc2;
+
+  epdata->epot_shift = 4 * irc6 * (irc6 - 1);
 #ifdef MINMD_2D
-    epdata->epot_tail = PI*rho*n*(.4*irc6 - 1)*irc4;
-    epdata->pres_tail = PI*rho*rho*(2.4*irc6 - 3)*irc4;
+  epdata->epot_tail = PI*rho*n*(.4*irc6 - 1)*irc4;
+  epdata->pres_tail = PI*rho*rho*(2.4*irc6 - 3)*irc4;
 #else
-    epdata->epot_tail = 8*PI*rho*n/9*(irc6 - 3)*irc3;
-    epdata->pres_tail = 32*PI*rho*rho/9*(irc6 - 1.5)*irc3;
+  epdata->epot_tail = 8*PI*rho*n/9*(irc6 - 3)*irc3;
+  epdata->pres_tail = 32*PI*rho*rho/9*(irc6 - 1.5)*irc3;
 #endif
+
+  return epdata;
+}
+
+
+void lj_epot_data_free(lj_epot_data_t *epdata)
+{
+  free(epdata);
 }
 
 
 typedef struct {
-  stat_accum_t *epot_acc;
-  stat_accum_t *ekin_acc;
-} lj_stat_t;
+  stat_accum_t *epot_accum;
+  stat_accum_t *ekin_accum;
+  stat_accum_t *etot_accum;
+} md_lj_stat_t;
 
 
-void lj_stat_init(lj_stat_t *stat_acc)
+md_lj_stat_t *md_lj_stat_init(void)
 {
-  stat_accum_init(stat_acc->epot_acc);
-  stat_accum_init(stat_acc->ekin_acc);
+  md_lj_stat_t *stat;
+  XNEW(stat, 1);
+  stat->epot_accum = stat_accum_init();
+  stat->ekin_accum = stat_accum_init();
+  stat->etot_accum = stat_accum_init();
+  return stat;
 }
 
-void lj_stat_add(lj_stat_t *stat_acc,
+void md_lj_stat_add(md_lj_stat_t *stat,
                  const lj_epot_data_t *epot_data,
                  real ekin)
 {
-  stat_accum_add(stat_acc->epot_acc, epot_data->epot);
-  stat_accum_add(stat_acc->ekin_acc, ekin);
+  real epot = epot_data->epot,
+       etot = ekin + epot;
+  stat_accum_add(stat->epot_accum, epot);
+  stat_accum_add(stat->ekin_accum, ekin);
+  stat_accum_add(stat->etot_accum, etot);
+}
+
+void md_lj_stat_free(md_lj_stat_t *stat)
+{
+  stat_accum_free(stat->epot_accum);
+  stat_accum_free(stat->ekin_accum);
+  stat_accum_free(stat->etot_accum);
+  free(stat);
 }
 
 
 
 typedef struct {
-  int dim; /* dimension, 3 or 2 */
   int n; /* number of particles */
   int n_dof; /* number of degrees of freedom */
   real rho;
   real vol;
   real l; /* box size */
-  lj_cutoff_t cutoff;
+  real rc;
+  real md_dt;
 
   real *mass; /* masses */
   real (*x)[DIM]; /* positions */
   real (*v)[DIM]; /* velocities */
   real (*f)[DIM]; /* forces */
-  real *r2ij; /* cached pair distances */
 
-  lj_epot_data_t epot_data; /* potential energy data */
+  lj_epot_data_t *epot_data; /* potential energy data */
   real ekin; /* kinetic energy */
-  lj_stat_t stat_acc; /* statistical accumulators */
+  real etot; /* total energy */
+  md_lj_stat_t *stat; /* statistical accumulators */
 
   rng_t *rng; /* random number generator */
-} lj_md_t;
+  thermostat_t *thermostat;
+} md_lj_t;
 
 
+real md_lj_force(md_lj_t *);
 
-lj_md_t *lj_md_open(int n, real rho, real rc_def)
+md_lj_t *md_lj_open(md_lj_param_t *param)
 {
-  lj_md_t *lj;
-  int i;
+  md_lj_t *lj;
+  int i, n = param->n;
 
-  lj->dim = DIM;
+  XNEW(lj, 1);
   lj->n = n;
   lj->n_dof = n * DIM - DIM; /* - DIM*(DIM+1)/2; // with angular part */
-  lj->rho = rho;
-  lj->vol = n / rho;
+  lj->rho = param->rho;
+  lj->vol = n / lj->rho;
   lj->l = pow(lj->vol, 1.0/DIM);
+  lj->md_dt = param->md_dt;
 
-  /* initialize the cutoff parameters */
-  lj_cutoff_init(&(lj->cutoff), rc_def, lj->l);
+  /* initialize the cutoff distance */
+  lj->rc = (param->rc_def < lj->l*0.5) ? param->rc_def : lj->l*0.5;
 
   /* initialize the potential energy */
-  lj_epot_data_init(&(lj->epot_data), &(lj->cutoff), n, rho);
+  lj->epot_data = lj_epot_data_init(lj->rc, n, lj->rho);
 
   lj->rng = rng_init(0, 0);
 
@@ -123,32 +158,164 @@ lj_md_t *lj_md_open(int n, real rho, real rc_def)
   XNEW(lj->x, n);
   XNEW(lj->v, n);
   XNEW(lj->f, n);
-  XNEW(lj->r2ij, n*n);
 
   /* initialize positions */
   mdutils_init_face_centered_lattice(n, lj->l, lj->x, lj->rng);
+  md_lj_force(lj);
 
   /* initialize velocities at the reference temperature */
-  real tp_ref = 1;
-  mdutils_init_velocities(n, lj->mass, lj->v, tp_ref, lj->rng); 
+  mdutils_init_velocities(n, lj->mass, lj->v, param->tp, lj->rng); 
+  lj->ekin = mdutils_ekin(n, lj->mass, lj->v);
 
-  stat_accum_init(&(lj->stat_acc));
+  /* compute the total energy */
+  lj->etot = lj->ekin + lj->epot_data->epot;
+
+  /* initialize the thermostat */
+  thermostat_vrescaling_param_t vrp = {
+    .rng = lj->rng
+  };
+  thermostat_param_t ts_param = {
+    .n = n,
+    .n_dof = n*DIM - DIM,
+    .tp = param->tp,
+    .dt = param->vr_dt,
+    .boltz = 1,
+    .mass = lj->mass,
+    .v = lj->v,
+    .algo_param = &vrp,
+  };
+  lj->thermostat = thermostat_init(param->thermostat_type, &ts_param);
+
+  /* initialize the statistical accumulators */
+  lj->stat = md_lj_stat_init();
 
   return lj;
 }
 
 
-
-void lj_md_step(lj_md_t *lj)
+void md_lj_free(md_lj_t *lj)
 {
+  thermostat_free(lj->thermostat);
+  md_lj_stat_free(lj->stat);
+  free(lj->mass);
+  free(lj->x);
+  free(lj->v);
+  free(lj->f);
+  lj_epot_data_free(lj->epot_data);
+  rng_free(lj->rng);
+  free(lj);
 }
 
-void lj_md_run(lj_md_t *lj, long long nsteps)
+
+INLINE real *md_lj_vec_pbc(real *x, real l, real invl)
+{
+  int d;
+  for (d = 0; d < DIM; d++) {
+    x[d] -= ((int)(x[d]*invl + 100.5) - 100.)*l;
+  }
+}
+
+
+INLINE real md_lj_pbc_dist2(real *dx, real *xi, real *xj, real l, real invl)
+{
+ vec_diff(dx, xi, xj);
+ md_lj_vec_pbc(dx, l, invl);
+ return vec_sqr(dx);
+}
+
+
+real md_lj_force(md_lj_t *lj)
+{
+  real dx[DIM], fi[DIM], dr2, ir2, ir6, fs;
+  real (*x)[DIM] = lj->x;
+  real (*f)[DIM] = lj->f;
+  real rc2 = lj->rc * lj->rc;
+  real l = lj->l, invl = 1/l;
+  int i, j, npr = 0, n = lj->n;
+
+  for (i = 0; i < n; i++) {
+    vec_zero(f[i]);
+  }
+
+  real epot6 = 0, epot12 = 0;
+  for (i = 0; i < n - 1; i++) {
+    vec_zero(fi);
+    for (j = i + 1; j < n; j++) {
+      dr2 = md_lj_pbc_dist2(dx, x[i], x[j], l, invl);
+      if (dr2 > rc2) {
+        continue;
+      }
+      ir2 = 1/dr2;
+      ir6 = ir2 * ir2 * ir2;
+      fs = ir6 * (48*ir6 - 24); /* f*r */
+      fs /= dr2; /* f*r / r^2 */
+      vec_sinc(fi,   dx,  fs);
+      vec_sinc(f[j], dx, -fs);
+      epot6 += ir6;
+      epot12 += ir6 * ir6;
+      npr++;
+    }
+    vec_inc(f[i], fi);
+  }
+
+  epot6 *= 4;
+  epot12 *= 4;
+  lj_epot_data_t *epdata = lj->epot_data;
+  epdata->epot_pr = epot12 - epot6;
+  epdata->epot6 = epot6;
+  epdata->epot12 = epot12;
+  epdata->epot_shifted = epdata->epot_pr - npr * epdata->epot_shift;
+  epdata->virial = 12 * epot12 - 6 * epot6;
+  epdata->epot = epdata->epot_pr + epdata->epot_tail; /* unshifted with tail correction */
+  return epdata->epot;
+}
+
+
+void md_lj_vv(md_lj_t *lj)
+{
+  int i, n = lj->n;
+  double dt = lj->md_dt,
+         dth = dt*0.5;
+
+  /* velocity verlet part 1 */
+  for (i = 0; i < n; i++) {
+    vec_sinc(lj->v[i], lj->f[i], dth/lj->mass[i]);
+    vec_sinc(lj->x[i], lj->v[i], dt);
+  }
+
+  md_lj_force(lj);
+  
+  /* velocity verlet part 2 */
+  for (i = 0; i < n; i++) {
+    vec_sinc(lj->v[i], lj->f[i], dth/lj->mass[i]);
+  }
+}
+
+
+void md_lj_step(md_lj_t *lj, const md_running_param_t *mrp)
+{
+  lj->ekin = thermostat_apply(lj->thermostat);
+  md_lj_vv(lj);
+  lj->ekin = thermostat_apply(lj->thermostat);
+  lj->etot = lj->ekin + lj->epot_data->epot;
+}
+
+
+void md_lj_run(md_lj_t *lj, const md_running_param_t *mrp)
 {
   long long step;
 
-  for (step = 0; step <= nsteps; step++) {
-    lj_md_step(lj);
+  for (step = 0; step < mrp->nsteps; step++) {
+    md_lj_step(lj, mrp);
+
+    if (mrp->do_stat) {
+      md_lj_stat_add(lj->stat, lj->epot_data, lj->ekin);
+    }
+
+    if (mrp->verbose > 1) {
+      fprintf(stderr, "step %lld: ekin %g + epot %g = etot %g\n",
+          step, lj->ekin, lj->epot_data->epot, lj->etot);
+    }
   }
 }
 

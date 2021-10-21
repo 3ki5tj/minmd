@@ -82,15 +82,13 @@ void mdutils_remove_com(int n, const real *mass, real (*v)[DIM])
 }
 
 
-void mdutils_init_velocities(int n, const real *mass, real (*v)[DIM], real tp_ref, rng_t *r)
+void mdutils_init_velocities(int n, const real *mass, real (*v)[DIM], real tp_ref, rng_t *rng)
 {
   int i, d;
 
   for (i = 0; i < n; i++) {
     real mag = (real) sqrt(tp_ref/mass[i]);
-    for (d = 0; d < DIM; d++) {
-      v[i][d] = mag * rng_gauss(r);
-    }
+    vec_rand_gauss(v[i], mag, rng);
   }
 
   mdutils_remove_com(n, mass, v);

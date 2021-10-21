@@ -12,7 +12,7 @@ typedef struct {
 } stat_accum_t;
 
 
-INLINE stat_accum_t *stat_accum_init()
+INLINE stat_accum_t *stat_accum_init(void)
 {
   stat_accum_t *acc;
 
@@ -20,6 +20,7 @@ INLINE stat_accum_t *stat_accum_init()
   acc->count = 0;
   acc->sum = 0;
   acc->svar = 0;
+  return acc;
 }
 
 

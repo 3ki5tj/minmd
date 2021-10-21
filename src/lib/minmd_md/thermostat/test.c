@@ -15,19 +15,21 @@ void init_velocities(int n, const real *mass, real (*v)[DIM], rng_t *rng)
 
 void test_vrescaling(int n, const real *mass, real (*v)[DIM])
 {
-  thermostat_param_t param = {0};
-  param.n = n;
-  param.n_dof = n*DIM - DIM;
-  param.tp = 2.0;
-  param.dt = 0.05;
-  param.mass = mass;
-  param.v = v;
-
   /* velocity rescaling parameters */
-  vrescaling_param_t vr_param = {0};
   rng_t *rng = rng_init(0, time(NULL));
-  vr_param.rng = rng;
-  param.algo_param = &vr_param;
+  thermostat_vrescaling_param_t vr_param = {
+    .rng = rng
+  };
+  thermostat_param_t param = {
+    .n = n,
+    .n_dof = n*DIM - DIM,
+    .tp = 2.0,
+    .dt = 0.05,
+    .boltz = 1.0,
+    .mass = mass,
+    .v = v,
+    .algo_param = &vr_param
+  };
 
   thermostat_t *ts = thermostat_init(THERMOSTAT_TYPE_VRESCALING, &param);
 
