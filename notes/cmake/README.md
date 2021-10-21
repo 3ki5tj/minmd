@@ -74,6 +74,7 @@ https://cmake.org/cmake/help/latest/guide/tutorial/Adding%20Usage%20Requirements
 
 ### Header-only library
 
+```
 +- header1
 |   |
 |   +- header1.h
@@ -85,6 +86,7 @@ https://cmake.org/cmake/help/latest/guide/tutorial/Adding%20Usage%20Requirements
 +- app
     |
     +- app.c (uses header2.h) 
+```
 
 header1/CMakeLists.txt:
 ```

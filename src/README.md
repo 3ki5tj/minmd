@@ -2,11 +2,13 @@
 
 ## Overview
 
+```
  +- lib                 libraries
  |  |
  |  +- minmd_basic      basic definitions
  |  |   |
  |  |   +- def          definitions
+ |  |   +- utils        utility functions 
  |  |
  |  +- minmd_math       mathematical
  |  |   |
@@ -20,6 +22,8 @@
  |      +- thermostat   thermostats
  |
  +- bin                 MD programs for different systems
-
+    |
+    +- md_lj            MD program for a Lennard-Jones fluid
+```
 
 libraries are all headers

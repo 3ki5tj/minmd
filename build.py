@@ -30,7 +30,7 @@ script_path = os.path.realpath(__file__)
 root_path = os.path.dirname(script_path)
 build_path = os.path.join(root_path, build_param["path"])
 if not os.path.exists(build_path):
-    os.path.makedirs(build_path)
+    os.makedirs(build_path)
 os.chdir(build_path)
 print(build_path, os.path.exists(build_path), os.getcwd())
 curr_path = os.path.realpath(os.getcwd())
