@@ -28,7 +28,6 @@ typedef struct {
 
 
 typedef struct {
-  real epot_pr, epot6, epot12;
   real epot_shifted;
   real epot_shift;
   real epot_tail;
@@ -44,23 +43,15 @@ lj_epot_data_t *lj_epot_data_init(real rc, int n, real rho)
   XNEW(epdata, 1);
 
   real irc = 1 / rc,
-       irc2 = irc * irc,
-       irc3 = irc2 * irc,
-       irc4 = irc2 * irc2,
-       irc6 = irc4 * irc2;
+       irc3 = irc * irc * irc,
+       irc6 = irc3 * irc3;
 
   epdata->epot_shift = 4 * irc6 * (irc6 - 1);
-#ifdef MINMD_2D
-  epdata->epot_tail = PI*rho*n*(.4*irc6 - 1)*irc4;
-  epdata->pres_tail = PI*rho*rho*(2.4*irc6 - 3)*irc4;
-#else
   epdata->epot_tail = 8*PI*rho*n/9*(irc6 - 3)*irc3;
   epdata->pres_tail = 32*PI*rho*rho/9*(irc6 - 1.5)*irc3;
-#endif
 
   return epdata;
 }
-
 
 void lj_epot_data_free(lj_epot_data_t *epdata)
 {
@@ -71,7 +62,6 @@ void lj_epot_data_free(lj_epot_data_t *epdata)
 typedef struct {
   stat_accum_t *ekin_accum;
   stat_accum_t *epot_accum;
-  stat_accum_t *etot_accum;
 } md_lj_stat_t;
 
 
@@ -81,7 +71,6 @@ md_lj_stat_t *md_lj_stat_init(void)
   XNEW(stat, 1);
   stat->ekin_accum = stat_accum_init();
   stat->epot_accum = stat_accum_init();
-  stat->etot_accum = stat_accum_init();
   return stat;
 }
 
@@ -89,7 +78,6 @@ void md_lj_stat_free(md_lj_stat_t *stat)
 {
   stat_accum_free(stat->ekin_accum);
   stat_accum_free(stat->epot_accum);
-  stat_accum_free(stat->etot_accum);
   free(stat);
 }
 
@@ -97,11 +85,9 @@ void md_lj_stat_add(md_lj_stat_t *stat,
                  const lj_epot_data_t *epot_data,
                  real ekin)
 {
-  real epot = epot_data->epot,
-       etot = ekin + epot;
+  real epot = epot_data->epot;
   stat_accum_add(stat->ekin_accum, ekin);
   stat_accum_add(stat->epot_accum, epot);
-  stat_accum_add(stat->etot_accum, etot);
 }
 
 
@@ -131,6 +117,7 @@ typedef struct {
 } md_lj_t;
 
 
+void md_lj_init_face_centered_lattice(int, real, real (*)[DIM], rng_t *);
 real md_lj_force(md_lj_t *);
 
 md_lj_t *md_lj_open(md_lj_param_t *param)
@@ -165,7 +152,7 @@ md_lj_t *md_lj_open(md_lj_param_t *param)
   XNEW(lj->f, n);
 
   /* initialize positions */
-  mdutils_init_face_centered_lattice(n, lj->l, lj->x, lj->rng);
+  md_lj_init_face_centered_lattice(n, lj->l, lj->x, lj->rng);
   md_lj_force(lj);
 
   /* initialize velocities at the reference temperature */
@@ -212,6 +199,34 @@ void md_lj_free(md_lj_t *lj)
 }
 
 
+
+void md_lj_init_face_centered_lattice(int n, real side_length, real (*x)[DIM], rng_t *r)
+{
+  int i, j, k, id, nside;
+  real a, noise;
+
+  nside = (int) (pow(2*n, 1.0/DIM) + .999999); /* # of particles per side */
+  a = side_length / nside;
+  noise = a * 1e-5;
+  for (id = 0, i = 0; i < nside && id < n; i++) {
+    for (j = 0; j < nside && id < n; j++) {
+      for (k = 0; k < nside && id < n; k++) {
+        if ((i+j+k) % 2 != 0) {
+          continue;
+        }
+        /* add some noise to prevent two atoms happened to
+         * be separated by precisely some special cutoff distance,
+         * which might be half of the box */
+        x[id][0] = (real) ((i + .5) * a + noise * (2*rng_rand01(r) - 1));
+        x[id][1] = (real) ((j + .5) * a + noise * (2*rng_rand01(r) - 1));
+        x[id][2] = (real) ((k + .5) * a + noise * (2*rng_rand01(r) - 1));
+        id++;
+      }
+    }
+  }
+}
+
+
 INLINE real *md_lj_vec_pbc(real *x, real l, real invl)
 {
   int d;
@@ -242,7 +257,7 @@ real md_lj_force(md_lj_t *lj)
     vec_zero(f[i]);
   }
 
-  real epot6 = 0, epot12 = 0;
+  double epot6 = 0, epot12 = 0;
   for (i = 0; i < n - 1; i++) {
     vec_zero(fi);
     for (j = i + 1; j < n; j++) {
@@ -265,13 +280,11 @@ real md_lj_force(md_lj_t *lj)
 
   epot6 *= 4;
   epot12 *= 4;
+  real epot_pr = (real) (epot12 - epot6);
   lj_epot_data_t *epdata = lj->epot_data;
-  epdata->epot_pr = epot12 - epot6;
-  epdata->epot6 = epot6;
-  epdata->epot12 = epot12;
-  epdata->epot_shifted = epdata->epot_pr - npr * epdata->epot_shift;
-  epdata->virial = 12 * epot12 - 6 * epot6;
-  epdata->epot = epdata->epot_pr + epdata->epot_tail; /* unshifted with tail correction */
+  epdata->epot_shifted = epot_pr - npr * epdata->epot_shift;
+  epdata->virial = (real) (12 * epot12 - 6 * epot6);
+  epdata->epot = epot_pr + epdata->epot_tail; /* unshifted with tail correction */
   return epdata->epot;
 }
 
@@ -332,10 +345,8 @@ void md_lj_print_stat(md_lj_t *lj)
   int n = lj->n, n_dof = lj->n_dof;
   double ekin_mean, ekin_std;
   double epot_mean, epot_std;
-  double etot_mean, etot_std;
   ekin_std = stat_accum_get_std(stat->ekin_accum, &ekin_mean);
   epot_std = stat_accum_get_std(stat->epot_accum, &epot_mean);
-  etot_std = stat_accum_get_std(stat->etot_accum, &etot_mean);
 
   real epot_ref, pres_ref, fex_ref, muex_ref;
   epot_ref = ljeos3d_get(lj->rho, lj->tp, &pres_ref, &fex_ref, &muex_ref);

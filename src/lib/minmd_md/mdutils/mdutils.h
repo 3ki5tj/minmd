@@ -6,60 +6,6 @@
 #include "utils.h"
 #include "vec.h"
 
-#ifdef MINMD_2D
-
-void mdutils_init_face_centered_lattice(int n, real side_length, real (*x)[DIM], rng_t *r)
-{
-  int i, j, id, nside;
-  real a, noise;
-
-  nside = (int) (pow(2*n, 1.0/DIM) + .999999); /* # of particles per side */
-  a = side_length / nside;
-  noise = a * 1e-5;
-  for (id = 0, i = 0; i < n_side && id < n; i++) {
-    for (j = 0; j < n_side && id < n; j++) {
-      if ((i+j) % 2 != 0) continue;
-      /* add some noise to prevent two atoms happened to
-       * be separated by precisely some special cutoff distance,
-       * which might be half of the box */
-      x[id][0] = (i + .5) * a + noise * (2*rng_rand01(r) - 1);
-      x[id][1] = (j + .5) * a + noise * (2*rng_rand01(r) - 1);
-      id++;
-    }
-  }
-}
-
-
-#else
-
-void mdutils_init_face_centered_lattice(int n, real side_length, real (*x)[DIM], rng_t *r)
-{
-  int i, j, k, id, nside;
-  real a, noise;
-
-  nside = (int) (pow(2*n, 1.0/DIM) + .999999); /* # of particles per side */
-  a = side_length / nside;
-  noise = a * 1e-5;
-  for (id = 0, i = 0; i < nside && id < n; i++) {
-    for (j = 0; j < nside && id < n; j++) {
-      for (k = 0; k < nside && id < n; k++) {
-        if ((i+j+k) % 2 != 0) {
-          continue;
-        }
-        /* add some noise to prevent two atoms happened to
-         * be separated by precisely some special cutoff distance,
-         * which might be half of the box */
-        x[id][0] = (real) ((i + .5) * a + noise * (2*rng_rand01(r) - 1));
-        x[id][1] = (real) ((j + .5) * a + noise * (2*rng_rand01(r) - 1));
-        x[id][2] = (real) ((k + .5) * a + noise * (2*rng_rand01(r) - 1));
-        id++;
-      }
-    }
-  }
-}
-
-
-#endif /* MINMD_2D */
 
 
 /* remove the center of mass motion */
