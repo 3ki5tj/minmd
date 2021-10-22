@@ -62,6 +62,7 @@ void lj_epot_data_free(lj_epot_data_t *epdata)
 typedef struct {
   stat_accum_t *ekin_accum;
   stat_accum_t *epot_accum;
+  stat_accum_t *vir_accum;
 } md_lj_stat_t;
 
 
@@ -71,6 +72,7 @@ md_lj_stat_t *md_lj_stat_init(void)
   XNEW(stat, 1);
   stat->ekin_accum = stat_accum_init();
   stat->epot_accum = stat_accum_init();
+  stat->vir_accum = stat_accum_init();
   return stat;
 }
 
@@ -78,6 +80,7 @@ void md_lj_stat_free(md_lj_stat_t *stat)
 {
   stat_accum_free(stat->ekin_accum);
   stat_accum_free(stat->epot_accum);
+  stat_accum_free(stat->vir_accum);
   free(stat);
 }
 
@@ -85,9 +88,11 @@ void md_lj_stat_add(md_lj_stat_t *stat,
                  const lj_epot_data_t *epot_data,
                  real ekin)
 {
-  real epot = epot_data->epot;
+  real epot = epot_data->epot,
+       vir = epot_data->virial;
   stat_accum_add(stat->ekin_accum, ekin);
   stat_accum_add(stat->epot_accum, epot);
+  stat_accum_add(stat->vir_accum, vir);
 }
 
 
@@ -109,7 +114,6 @@ typedef struct {
 
   lj_epot_data_t *epot_data; /* potential energy data */
   real ekin; /* kinetic energy */
-  real etot; /* total energy */
   md_lj_stat_t *stat; /* statistical accumulators */
 
   rng_t *rng; /* random number generator */
@@ -156,11 +160,8 @@ md_lj_t *md_lj_open(md_lj_param_t *param)
   md_lj_force(lj);
 
   /* initialize velocities at the reference temperature */
-  mdutils_init_velocities(n, lj->mass, lj->v, param->tp, lj->rng); 
+  mdutils_init_velocities(n, lj->mass, lj->v, param->tp, lj->rng);
   lj->ekin = mdutils_ekin(n, lj->mass, lj->v);
-
-  /* compute the total energy */
-  lj->etot = lj->ekin + lj->epot_data->epot;
 
   /* initialize the thermostat */
   thermostat_vrescaling_param_t vrp = {
@@ -302,7 +303,7 @@ void md_lj_vv(md_lj_t *lj)
   }
 
   md_lj_force(lj);
-  
+
   /* velocity verlet part 2 */
   for (i = 0; i < n; i++) {
     vec_sinc(lj->v[i], lj->f[i], dth/lj->mass[i]);
@@ -315,7 +316,6 @@ void md_lj_step(md_lj_t *lj, const md_running_param_t *mrp)
   lj->ekin = thermostat_apply(lj->thermostat);
   md_lj_vv(lj);
   lj->ekin = thermostat_apply(lj->thermostat);
-  lj->etot = lj->ekin + lj->epot_data->epot;
 }
 
 
@@ -331,8 +331,15 @@ void md_lj_run(md_lj_t *lj, const md_running_param_t *mrp)
     }
 
     if (mrp->verbose > 1 && step % mrp->nst_print == 0) {
-      fprintf(stderr, "step %lld: ekin %g + epot %g = etot %g\n",
-          step, lj->ekin, lj->epot_data->epot, lj->etot);
+      fprintf(stderr, "step %8lld: tp %6.4f, epot/n %6.3f",
+          step, lj->ekin*2/lj->n_dof, lj->epot_data->epot/lj->n);
+      if (lj->thermostat->type == THERMOSTAT_TYPE_NULL) {
+        /* total energy with the potentital part shifted, should be conserved */
+        double etot_shifted = lj->epot_data->epot_shifted + lj->ekin;
+        fprintf(stderr, ", epot_shifted %g, etot_shifted %g",
+            lj->epot_data->epot_shifted, etot_shifted);
+      }
+      fprintf(stderr, "\n");
     }
   }
 }
@@ -345,19 +352,30 @@ void md_lj_print_stat(md_lj_t *lj)
   int n = lj->n, n_dof = lj->n_dof;
   double ekin_mean, ekin_std;
   double epot_mean, epot_std;
+  double vir_mean, vir_std;
+  double pres_mean, pres_std;
   ekin_std = stat_accum_get_std(stat->ekin_accum, &ekin_mean);
   epot_std = stat_accum_get_std(stat->epot_accum, &epot_mean);
+  vir_std = stat_accum_get_std(stat->vir_accum, &vir_mean);
+  pres_mean = lj->rho * lj->tp
+            + vir_mean / (DIM * lj->vol)
+            + lj->epot_data->pres_tail;
+  pres_std = vir_std / (DIM * lj->vol);
 
+  // get the equation of state data
   real epot_ref, pres_ref, fex_ref, muex_ref;
   epot_ref = ljeos3d_get(lj->rho, lj->tp, &pres_ref, &fex_ref, &muex_ref);
 
-  printf("  nsteps %lld\n"
-         "       n %d\n"
-         "      tp %g+/-%g (cf: %g)\n"
-         "  epot/n %g+/-%g (cf: %g)\n",
+  printf("  nsteps %8lld\n"
+         "       n %8d\n"
+         "      tp %8.4f+/-%6.4f (cf: %8.4f)\n"
+         "  epot/n %8.4f+/-%6.4f (cf: %8.4f)\n"
+         "    pres %8.4f+/-%6.4f (cf: %8.4f)\n"
+         "(NOTE: numbers after \"+/-\" are standard deviations, not estimated errors)\n",
       stat->ekin_accum->count, n,
       2*ekin_mean/n_dof, 2*ekin_std/n_dof, lj->tp,
-      epot_mean/n, epot_std/n, epot_ref);
+      epot_mean/n, epot_std/n, epot_ref,
+      pres_mean, pres_std, pres_ref);
 }
 
 

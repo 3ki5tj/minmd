@@ -3,5 +3,4 @@
 #define MINMD_VERSION_MINOR @MinMD_VERSION_MINOR@
 
 #cmakedefine MINMD_DOUBLE
-#cmakedefine MINMD_2D
 

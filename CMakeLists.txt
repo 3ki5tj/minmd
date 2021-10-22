@@ -11,17 +11,6 @@ else()
   message("Using single-precision floating-point numbers")
 endif()
 
-# determine if we need a 2D or 3D system
-# activate this option by `cmake .. -DMINMD_2D=ON`
-option(MINMD_2D "Work with two-dimensional system" OFF)
-if (MINMD_2D)
-  set_property(GLOBAL PROPERTY MINMD_DIM 2)
-else()
-  set_property(GLOBAL PROPERTY MINMD_DIM 3)
-endif()
-get_property(DIM GLOBAL PROPERTY MINMD_DIM)
-message("Working with ${DIM}-dimensional systems")
-
 configure_file(MinMDConfig.h.in MinMDConfig.h)
 
 add_subdirectory(src)

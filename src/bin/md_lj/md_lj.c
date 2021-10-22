@@ -22,7 +22,7 @@ md_running_param_t equil_param = {
 
 /* production run parameters */
 md_running_param_t prod_param = {
-  .nsteps = 10000,
+  .nsteps = 20000,
   .verbose = 0,
   .do_stat = 1,
 };

@@ -11,7 +11,7 @@ target_link_libraries(${PROJECT_NAME}
   minmd_basic
   minmd_math
   minmd_md
-  )
+)
 
 target_include_directories(${PROJECT_NAME}
   INTERFACE

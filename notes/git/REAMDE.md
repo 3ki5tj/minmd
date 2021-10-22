@@ -23,3 +23,10 @@ git config --global user.email "3ki5tj@gmail.com"
 ```
 git config -l
 ```
+
+
+## List all files
+
+```
+git ls-files
+```
