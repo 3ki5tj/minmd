@@ -8,7 +8,7 @@ Our aim is to write a simple, didactic molecular dynamics program that helps peo
 understand the main logic behind many MD algorithms.
 We wish to keep the code as simple as possible and the optimization is limited.
 
-## Compiling 
+## Compiling
 
 Quick way of building the system:
 ```
@@ -39,7 +39,7 @@ by Daan Frenkel and Berend Smit, Academic Press
 
 ### MD packages
 
-GROMACS is probably the fastest CPU MD code on earth 
+GROMACS is probably the fastest CPU MD code on earth
 https://github.com/gromacs/gromacs
 
 But GROMACS has become very complex, the early version v1.6 has a much simpler code structure.
