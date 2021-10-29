@@ -1,7 +1,7 @@
-#include "lj.h"
+#include "ocp.h"
 
 
-md_lj_param_t param = {
+md_ocp_param_t param = {
   .n = 108,
   .rho = 0.7, /* reduced density */
   .tp = 2.0, /* reduced temperature */
@@ -14,16 +14,17 @@ md_lj_param_t param = {
 
 /* equilibration run parameters */
 md_running_param_t equil_param = {
-  .nsteps = 10000,
+  .nsteps = 500,
   .verbose = 2,
-  .nst_print = 1000,
+  .nst_print = 100,
   .do_stat = 0,
 };
 
 /* production run parameters */
 md_running_param_t prod_param = {
-  .nsteps = 20000,
-  .verbose = 0,
+  .nsteps = 2000,
+  .verbose = 2,
+  .nst_print = 100,
   .do_stat = 1,
 };
 
@@ -31,16 +32,17 @@ md_running_param_t prod_param = {
 
 int main(void)
 {
-  md_lj_t *lj = md_lj_init(&param);
+  md_ocp_t *ocp = md_ocp_init(&param);
 
   /* equilibration run */
-  md_lj_run(lj, &equil_param);
+  md_ocp_run(ocp, &equil_param);
 
   /* production run */
-  md_lj_run(lj, &prod_param);
-  md_lj_print_stat(lj);
+  printf("\n\nStarting production run...\n");
+  md_ocp_run(ocp, &prod_param);
+  md_ocp_print_stat(ocp);
 
-  md_lj_free(lj);
+  md_ocp_free(ocp);
 
   return 0;
 }

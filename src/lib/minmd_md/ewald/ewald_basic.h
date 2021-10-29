@@ -251,10 +251,11 @@ INLINE ewald_data_t *ewald_data_init(const ewald_param_t *ewp)
   ewd->recip_energy = 0;
   ewd->self_energy = ewald_self_energy(ewp, ewd->alpha, ewd->q2tot);
   ewd->background_energy = ewald_background_energy(ewp, ewd->alpha, ewd->qtot, ewd->vol);
-  printf("Ewald:\nalpha %g (1/sqrt(2*alpha) %g)\n"
+  printf("Ewald:\n"
+      "alpha %g (1/sqrt(2*alpha) %g), rc %g\n"
       "real-space error %g, recip-space error %g, tol %g\n"
       "self %g, background %g, ikmax %d %d %d\n\n",
-      ewd->alpha, 1/sqrt(2*ewd->alpha),
+      ewd->alpha, 1/sqrt(2*ewd->alpha), ewd->rc,
       ewd->real_space_error, ewd->recip_space_error, ewp->tol,
       ewd->self_energy, ewd->background_energy,
       ewd->ikmax[0], ewd->ikmax[1], ewd->ikmax[2]);

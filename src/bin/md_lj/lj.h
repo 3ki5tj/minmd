@@ -124,7 +124,7 @@ typedef struct {
 void md_lj_init_face_centered_lattice(int, real, real (*)[DIM], rng_t *);
 real md_lj_force(md_lj_t *);
 
-md_lj_t *md_lj_open(md_lj_param_t *param)
+md_lj_t *md_lj_init(md_lj_param_t *param)
 {
   md_lj_t *lj;
   int i, n = param->n;

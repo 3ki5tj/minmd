@@ -22,7 +22,7 @@ md_running_param_t equil_param = {
 
 int main(void)
 {
-  md_lj_t *lj = md_lj_open(&param);
+  md_lj_t *lj = md_lj_init(&param);
   md_lj_run(lj, &equil_param);
   md_lj_free(lj);
 

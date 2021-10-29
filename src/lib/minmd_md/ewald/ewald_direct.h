@@ -127,7 +127,7 @@ INLINE real ewald_direct_force_recip(ewald_param_t *ewp, ewald_data_t *ewd, doub
 real ewald_direct_force(ewald_t *ew, ewald_force_options_t *ewf_opt)
 {
   ewald_param_t *ewp = ew->param;
-  ewald_data_t *ewd = (ewald_data_t *) ew->data;
+  ewald_data_t *ewd = ew->data;
 
   if (ewf_opt->zero_forces) {
     int i;
