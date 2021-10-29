@@ -41,11 +41,12 @@ INLINE void ewald_direct_free(ewald_t *ew)
 INLINE real ewald_direct_force_real(ewald_param_t *ewp, ewald_data_t *ewd, double *virial)
 {
   int n = ewp->n, i, j;
-  double alpha = ewd->alpha,
+  double rc = ewd->rc,
+         alpha = ewd->alpha,
          sqrta = ewd->sqrt_alpha,
          sqrtapi = ewd->sqrt_alpha_over_pi,
          kee = ewp->kee;
-  double fscl, ene = 0, vir = 0;
+  double fscl, ene = 0;
   real (*x)[DIM] = ewp->x, dx[DIM], rij,
        (*f)[DIM] = ewp->f, qi, qj;
 
@@ -54,18 +55,20 @@ INLINE real ewald_direct_force_real(ewald_param_t *ewp, ewald_data_t *ewd, doubl
     for (j = i + 1; j < n; j++) {
       qj = ewp->charge[j];
       rij = ewald_dist_func(dx, x[i], x[j], ewp->box);
-      double kqij = kee*qi*qj,
-             ec = erfc(sqrta*rij),
-             rij2 = rij*rij,
-             eij = kqij*ec/rij;
-      ene += eij;
-      vir += eij;
-      fscl = (real)((kqij*2*sqrtapi*exp(-alpha*rij2) + eij)/rij2);
-      vec_sinc(f[i], dx,  fscl);
-      vec_sinc(f[j], dx, -fscl);
+      if (rij < rc) {
+        double kqij = kee*qi*qj,
+               ec = erfc(sqrta*rij),
+               rij2 = rij*rij,
+               eij = kqij*ec/rij;
+        ene += eij;
+        fscl = (real)((kqij*2*sqrtapi*exp(-alpha*rij2) + eij)/rij2);
+        vec_sinc(f[i], dx,  fscl);
+        vec_sinc(f[j], dx, -fscl);
+      }
     }
   }
-  *virial = vir; /* fi.ri */
+  /* in this system, virial and energy are the same */
+  *virial = ene; /* fi.ri */
 
   return ene;
 }

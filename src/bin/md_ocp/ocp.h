@@ -15,6 +15,7 @@ typedef struct {
   real md_dt;
   int thermostat_type;
   real vr_dt;
+  real ewald_tol;
 } md_ocp_param_t;
 
 
@@ -60,6 +61,7 @@ void epot_vdw_data_free(epot_vdw_data_t *epdata)
 
 typedef struct {
   real epot;
+  real epot_shifted;
   real virial;
 } epot_charge_data_t;
 
@@ -69,6 +71,7 @@ epot_charge_data_t *epot_charge_data_init(real rc, int n, real rho)
   XNEW(epdata, 1);
 
   epdata->epot = 0;
+  epdata->epot_shifted = 0;
   epdata->virial = 0;
 
   return epdata;
@@ -83,7 +86,10 @@ void epot_charge_data_free(epot_charge_data_t *epdata)
 
 typedef struct {
   real epot;
+  real epot_shifted;
   real virial;
+  epot_vdw_data_t *vdw;
+  epot_charge_data_t *charge;
 } epot_data_t;
 
 epot_data_t *epot_data_init(real rc, int n, real rho)
@@ -92,23 +98,27 @@ epot_data_t *epot_data_init(real rc, int n, real rho)
   XNEW(epdata, 1);
 
   epdata->epot = 0;
+  epdata->epot_shifted = 0;
   epdata->virial = 0;
+  epdata->vdw = epot_vdw_data_init(rc, n, rho);
+  epdata->charge = epot_charge_data_init(rc, n, rho);
 
   return epdata;
 }
 
-void epot_data_aggregate(epot_data_t *epdata, epot_vdw_data_t *ep1, epot_charge_data_t *ep2)
+void epot_data_aggregate(epot_data_t *epdata)
 {
-  epdata->epot = ep1->epot + ep2->epot;
-  epdata->virial = ep1->virial + ep2->virial;
+  epdata->epot = epdata->vdw->epot + epdata->charge->epot;
+  epdata->epot_shifted = epdata->vdw->epot_shifted + epdata->charge->epot_shifted;
+  epdata->virial = epdata->vdw->virial + epdata->charge->virial;
 }
 
 void epot_data_free(epot_data_t *epdata)
 {
+  epot_vdw_data_free(epdata->vdw);
+  epot_charge_data_free(epdata->charge);
   free(epdata);
 }
-
-
 
 
 
@@ -163,10 +173,7 @@ typedef struct {
 
   ewald_t *ew;
 
-  /* potential energy data */
-  epot_vdw_data_t *epot_vdw_data;
-  epot_charge_data_t *epot_charge_data;
-  epot_data_t *epot_data;
+  epot_data_t *epot_data; /* potential energy data */
   real ekin; /* kinetic energy */
   md_ocp_stat_t *stat; /* statistical accumulators */
 
@@ -196,8 +203,6 @@ md_ocp_t *md_ocp_init(md_ocp_param_t *param)
   ocp->rc = (param->rc_def < ocp->l*0.5) ? param->rc_def : ocp->l*0.5;
 
   /* initialize the potential energy */
-  ocp->epot_vdw_data = epot_vdw_data_init(ocp->rc, n, ocp->rho);
-  ocp->epot_charge_data = epot_charge_data_init(ocp->rc, n, ocp->rho);
   ocp->epot_data = epot_data_init(ocp->rc, n, ocp->rho);
 
   ocp->rng = rng_init(0, 0);
@@ -220,12 +225,13 @@ md_ocp_t *md_ocp_init(md_ocp_param_t *param)
   md_ocp_init_face_centered_lattice(n, ocp->l, ocp->x, ocp->rng);
 
   /* initialize the ewald method for charge interaction */
+  double ewald_tol = param->ewald_tol > 0 ? param->ewald_tol : 1e-6;
   ewald_param_t ewp = {
     .n = n,
     .box = {ocp->l, ocp->l, ocp->l},
     .rc = ocp->rc,
     .sigma = 0.0, /* choose alpha automatically */
-    .tol = 1e-7,
+    .tol = ewald_tol,
     .kee = 1.0,
     .charge = ocp->charge,
     .x = ocp->x,
@@ -272,8 +278,6 @@ void md_ocp_free(md_ocp_t *ocp)
   free(ocp->x);
   free(ocp->v);
   free(ocp->f);
-  epot_vdw_data_free(ocp->epot_vdw_data);
-  epot_charge_data_free(ocp->epot_charge_data);
   epot_data_free(ocp->epot_data);
   rng_free(ocp->rng);
   free(ocp);
@@ -387,12 +391,10 @@ real md_ocp_force_charge(md_ocp_t *ocp, epot_charge_data_t *epdata)
 
 real md_ocp_force(md_ocp_t *ocp)
 {
-  md_ocp_force_vdw(ocp, ocp->epot_vdw_data);
-  md_ocp_force_charge(ocp, ocp->epot_charge_data);
+  md_ocp_force_vdw(ocp, ocp->epot_data->vdw);
+  md_ocp_force_charge(ocp, ocp->epot_data->charge);
 
-  epot_data_aggregate(ocp->epot_data,
-                      ocp->epot_vdw_data,
-                      ocp->epot_charge_data);
+  epot_data_aggregate(ocp->epot_data);
   return ocp->epot_data->epot;
 }
 
@@ -426,6 +428,21 @@ void md_ocp_step(md_ocp_t *ocp, const md_running_param_t *mrp)
 }
 
 
+void md_ocp_def_logger(md_ocp_t *ocp, const md_running_param_t *mrp, long long step)
+{
+  fprintf(stderr, "step %lld: tp %g, epot/n %g",
+      step, ocp->ekin*2/ocp->n_dof, ocp->epot_data->epot/ocp->n);
+  if (ocp->thermostat->type == THERMOSTAT_TYPE_NULL) {
+    double epot_shifted = ocp->epot_data->vdw->epot_shifted
+                        + ocp->epot_data->charge->epot;
+    double etot_shifted = epot_shifted + ocp->ekin;
+    fprintf(stderr, ", epot_shifted %g, etot_shifted %g",
+        epot_shifted, etot_shifted);
+  }
+  fprintf(stderr, "\n");
+}
+
+
 void md_ocp_run(md_ocp_t *ocp, const md_running_param_t *mrp)
 {
   long long step;
@@ -438,8 +455,7 @@ void md_ocp_run(md_ocp_t *ocp, const md_running_param_t *mrp)
     }
 
     if (mrp->verbose > 1 && step % mrp->nst_print == 0) {
-      fprintf(stderr, "step %lld: tp %g, epot/n %g\n",
-          step, ocp->ekin*2/ocp->n_dof, ocp->epot_data->epot/ocp->n);
+      md_ocp_def_logger(ocp, mrp, step);
     }
   }
 }

@@ -7,6 +7,7 @@ md_ocp_param_t param = {
   .rho = 0.7, /* reduced density */
   .tp = 2.0, /* reduced temperature */
   .rc_def = 2.5,
+  .ewald_tol = 1e-5,
 };
 
 

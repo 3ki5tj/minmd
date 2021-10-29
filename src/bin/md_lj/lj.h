@@ -319,6 +319,20 @@ void md_lj_step(md_lj_t *lj, const md_running_param_t *mrp)
 }
 
 
+void md_lj_def_logger(md_lj_t *lj, const md_running_param_t *mrp, long long step)
+{
+  fprintf(stderr, "step %8lld: tp %6.4f, epot/n %6.3f",
+      step, lj->ekin*2/lj->n_dof, lj->epot_data->epot/lj->n);
+  if (lj->thermostat->type == THERMOSTAT_TYPE_NULL) {
+    /* total energy with the potentital part shifted, should be conserved */
+    double etot_shifted = lj->epot_data->epot_shifted + lj->ekin;
+    fprintf(stderr, ", epot_shifted %g, etot_shifted %g",
+        lj->epot_data->epot_shifted, etot_shifted);
+  }
+  fprintf(stderr, "\n");
+}
+
+
 void md_lj_run(md_lj_t *lj, const md_running_param_t *mrp)
 {
   long long step;
@@ -331,15 +345,7 @@ void md_lj_run(md_lj_t *lj, const md_running_param_t *mrp)
     }
 
     if (mrp->verbose > 1 && step % mrp->nst_print == 0) {
-      fprintf(stderr, "step %8lld: tp %6.4f, epot/n %6.3f",
-          step, lj->ekin*2/lj->n_dof, lj->epot_data->epot/lj->n);
-      if (lj->thermostat->type == THERMOSTAT_TYPE_NULL) {
-        /* total energy with the potentital part shifted, should be conserved */
-        double etot_shifted = lj->epot_data->epot_shifted + lj->ekin;
-        fprintf(stderr, ", epot_shifted %g, etot_shifted %g",
-            lj->epot_data->epot_shifted, etot_shifted);
-      }
-      fprintf(stderr, "\n");
+      md_lj_def_logger(lj, mrp, step);
     }
   }
 }

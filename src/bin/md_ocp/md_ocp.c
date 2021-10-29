@@ -7,9 +7,9 @@ md_ocp_param_t param = {
   .tp = 2.0, /* reduced temperature */
   .rc_def = 2.5,
   .md_dt = 0.005, /* MD time step */
-  //.thermostat_type = THERMOSTAT_TYPE_NULL, /* no thermostat, good for testing energy conservation */
   .thermostat_type = THERMOSTAT_TYPE_VRESCALING, /* velocity rescaling thermostat */
   .vr_dt = 0.02, /* effective time step for velocity rescaling thermostat */
+  .ewald_tol = 3e-5,
 };
 
 /* equilibration run parameters */
@@ -22,9 +22,9 @@ md_running_param_t equil_param = {
 
 /* production run parameters */
 md_running_param_t prod_param = {
-  .nsteps = 2000,
+  .nsteps = 5000,
   .verbose = 2,
-  .nst_print = 100,
+  .nst_print = 500,
   .do_stat = 1,
 };
 
