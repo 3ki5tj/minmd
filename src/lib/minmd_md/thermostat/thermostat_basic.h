@@ -1,7 +1,7 @@
 #ifndef THERMOSTAT_BASIC_H__
 #define THERMOSTAT_BASIC_H__
 
-#include "def.h"
+#include "utils.h"
 
 /* common thermostat parameters */
 typedef struct {
@@ -23,11 +23,24 @@ enum {
 };
 
 typedef struct {
+  void *algo_data;
+} thermostat_data_t;
+
+typedef struct {
   int type;
   thermostat_param_t *param;
-  void *data;
+  thermostat_data_t *data;
 } thermostat_t;
 
+
+INLINE thermostat_data_t *thermostat_data_init(const thermostat_param_t *tsp,
+    void *algo_data)
+{
+  thermostat_data_t *tsd;
+
+  XNEW(tsd, 1);
+  tsd->algo_data = algo_data;
+}
 
 #endif /* THERMOSTAT_BASIC_H__ */
 

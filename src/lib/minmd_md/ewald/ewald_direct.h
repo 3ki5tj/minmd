@@ -16,9 +16,8 @@ ewald_t *ewald_direct_init(ewald_param_t *param)
   XCLONE(ew->param, param, sizeof(*param));
   ew->param->algo_param = NULL;
 
-  /* build data */
-  ew->data = ewald_data_init(ew->param);
-  ew->data->algo_data = NULL;
+  /* initialize data */
+  ew->data = ewald_data_init(ew->param, NULL);
   return ew;
 }
 

@@ -21,7 +21,6 @@ typedef struct {
 thermostat_t *thermostat_vrescaling_init(thermostat_param_t *param)
 {
   thermostat_t *ts;
-  thermostat_vrescaling_data_t *vr_data;
 
   XNEW(ts, 1);
   ts->type = THERMOSTAT_TYPE_VRESCALING;
@@ -30,11 +29,12 @@ thermostat_t *thermostat_vrescaling_init(thermostat_param_t *param)
   XCLONE(ts->param, param, sizeof(*param));
   XCLONE(ts->param->algo_param, param->algo_param, sizeof(thermostat_vrescaling_param_t));
 
-  /* build data */
+  /* initialize data */
+  thermostat_vrescaling_data_t *vr_data;
   XNEW(vr_data, 1);
-  vr_data->halfkt = param->boltz * param->tp;
+  vr_data->halfkt = 0.5 * param->boltz * param->tp;
   vr_data->expndt = exp(-param->dt);
-  ts->data = vr_data;
+  ts->data = thermostat_data_init(ts->param, vr_data);
 
   return ts;
 }
@@ -44,6 +44,7 @@ void thermostat_vrescaling_free(thermostat_t *ts)
 {
   free(ts->param->algo_param);
   free(ts->param);
+  free(ts->data->algo_data);
   free(ts->data);
   free(ts);
 }
@@ -53,9 +54,11 @@ real thermostat_vrescaling_apply(thermostat_t *ts)
 {
   thermostat_param_t *tsp = ts->param;
   thermostat_vrescaling_param_t *vrp = (thermostat_vrescaling_param_t *) tsp->algo_param;
-  thermostat_vrescaling_data_t *vrd = (thermostat_vrescaling_data_t *) ts->data;
+  thermostat_data_t *tsd = ts->data;
+  thermostat_vrescaling_data_t *vrd = (thermostat_vrescaling_data_t *) tsd->algo_data;
   double dt = tsp->dt,
          c = vrd->expndt,
+         halfkt = vrd->halfkt,
          ek1, ek2, s, r, r2;
   int n = tsp->n, i;
   rng_t *rng = vrp->rng;
@@ -64,8 +67,8 @@ real thermostat_vrescaling_apply(thermostat_t *ts)
   r = rng_gauss(rng);
   r2 = rng_chisqr(rng, tsp->n_dof - 1);
   ek2 = ek1
-      + (1 - c) * ((r2 + r * r) * tsp->tp * 0.5 - ek1)
-      + 2 * r * sqrt(c * (1 - c) * ek1 * tsp->tp * 0.5);
+      + (1 - c) * ((r2 + r * r) * halfkt - ek1)
+      + 2 * r * sqrt(c * (1 - c) * ek1 * halfkt);
   if (ek2 < 0) {
     ek2 = 0;
   }

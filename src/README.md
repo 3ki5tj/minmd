@@ -5,12 +5,12 @@
 ```
  +- lib                 libraries
  |  |
- |  +- minmd_basic      basic definitions
+ |  +- minmd_basic      basic definitions and functions
  |  |   |
  |  |   +- def          definitions
  |  |   +- utils        utility functions 
  |  |
- |  +- minmd_math       mathematical
+ |  +- minmd_math       mathematical functions
  |  |   |
  |  |   +- rng          random number generator
  |  |   +- vec          3D/2D vector
@@ -18,12 +18,14 @@
  |  |
  |  +- minmd_md         MD-related 
  |      |
- |      +- mdutils      MD-related utility 
+ |      +- mdutils      utilities 
  |      +- thermostat   thermostats
+ |      +- ewald        Ewald sum
  |
  +- bin                 MD programs for different systems
     |
-    +- md_lj            MD program for a Lennard-Jones fluid
+    +- md_lj            Lennard-Jones fluid
+    +- md_ocp           One-component plasma
 ```
 
 libraries are all headers

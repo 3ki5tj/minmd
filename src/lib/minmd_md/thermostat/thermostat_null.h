@@ -20,6 +20,9 @@ thermostat_t *thermostat_null_init(thermostat_param_t *param)
   ts->param->algo_param = NULL;
   ts->data = NULL;
 
+  /* initialize data */
+  ts->data = thermostat_data_init(ts->param, NULL);
+
   return ts;
 }
 
@@ -27,6 +30,7 @@ thermostat_t *thermostat_null_init(thermostat_param_t *param)
 void thermostat_null_free(thermostat_t *ts)
 {
   free(ts->param);
+  free(ts->data);
   free(ts);
 }
 
