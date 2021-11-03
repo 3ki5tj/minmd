@@ -18,7 +18,7 @@ void test_ewald_direct_ocp1(void)
   };
   ewald_t *ew;
 
-  ew = ewald_init(EWALD_TYPE_DIRECT, &ewp);
+  ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
   ewald_force_options_t ewf_opt = {
     .zero_forces = 1,
   };
@@ -26,7 +26,7 @@ void test_ewald_direct_ocp1(void)
   printf("energy %.8f/2=%g, real %g, recip %g, self %g, background %g\n\n\n",
       ene*2, ene, ew->data->real_energy, ew->data->recip_energy,
       ew->data->self_energy, ew->data->background_energy);
-  ewald_free(ew);
+  ewald_delete(ew);
 }
 
 
@@ -47,7 +47,7 @@ void test_ewald_direct_ocp2(void)
     .x = x,
     .f = f,
   };
-  ewald_t *ew = ewald_init(EWALD_TYPE_DIRECT, &ewp);
+  ewald_t *ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
   ewald_force_options_t ewf_opt = {
     .zero_forces = 1,
   };
@@ -85,7 +85,7 @@ void test_ewald_direct_ocp2(void)
       (ereal2 - ereal1)/delta,
       (erecip2 - erecip1)/delta);
 
-  ewald_free(ew);
+  ewald_delete(ew);
 }
 
 

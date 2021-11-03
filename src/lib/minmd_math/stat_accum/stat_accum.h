@@ -12,7 +12,7 @@ typedef struct {
 } stat_accum_t;
 
 
-INLINE stat_accum_t *stat_accum_init(void)
+INLINE stat_accum_t *stat_accum_new(void)
 {
   stat_accum_t *acc;
 
@@ -24,7 +24,7 @@ INLINE stat_accum_t *stat_accum_init(void)
 }
 
 
-INLINE void stat_accum_free(stat_accum_t *acc)
+INLINE void stat_accum_delete(stat_accum_t *acc)
 {
   free(acc);
 }

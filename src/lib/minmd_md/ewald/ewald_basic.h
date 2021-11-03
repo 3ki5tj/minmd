@@ -220,7 +220,7 @@ INLINE double ewald_ikmax(int *ikmax, double tol, const real *kbox, double rc, d
 }
 
 
-INLINE ewald_data_t *ewald_data_init(const ewald_param_t *ewp,
+INLINE ewald_data_t *ewald_data_new(const ewald_param_t *ewp,
     void *algo_data)
 {
   ewald_data_t *ewd;
@@ -264,6 +264,12 @@ INLINE ewald_data_t *ewald_data_init(const ewald_param_t *ewp,
   ewd->algo_data = algo_data;
 
   return ewd;
+}
+
+
+INLINE void ewald_data_delete(ewald_data_t *ewd)
+{
+  free(ewd);
 }
 
 

@@ -8,7 +8,7 @@
 #include "mdutils.h"
 
 
-thermostat_t *thermostat_null_init(thermostat_param_t *param)
+thermostat_t *thermostat_null_new(thermostat_param_t *param)
 {
   thermostat_t *ts;
 
@@ -18,19 +18,18 @@ thermostat_t *thermostat_null_init(thermostat_param_t *param)
   /* clone parameters */
   XCLONE(ts->param, param, sizeof(*param));
   ts->param->algo_param = NULL;
-  ts->data = NULL;
 
   /* initialize data */
-  ts->data = thermostat_data_init(ts->param, NULL);
+  ts->data = thermostat_data_new(ts->param, NULL);
 
   return ts;
 }
 
 
-void thermostat_null_free(thermostat_t *ts)
+void thermostat_null_delete(thermostat_t *ts)
 {
   free(ts->param);
-  free(ts->data);
+  thermostat_data_delete(ts->data);
   free(ts);
 }
 

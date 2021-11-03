@@ -22,18 +22,18 @@ md_running_param_t equil_param = {
 
 int main(void)
 {
-  md_lj_t *lj = md_lj_init(&param);
+  md_lj_t *lj = md_lj_new(&param);
   md_lj_run(lj, &equil_param);
  
   /* here we replace the thermostat by switching to type THERMOSTAT_TYPE_NULL */
   thermostat_t *old_thermostat = lj->thermostat;
-  lj->thermostat = thermostat_init(THERMOSTAT_TYPE_NULL, old_thermostat->param);
-  thermostat_free(old_thermostat);
+  lj->thermostat = thermostat_new(THERMOSTAT_TYPE_NULL, old_thermostat->param);
+  thermostat_delete(old_thermostat);
 
   printf("\n\nStarting testing energy conservation...\n");
   printf("Pay attention to etot_shifted\n");
   md_lj_run(lj, &equil_param);
-  md_lj_free(lj);
+  md_lj_delete(lj);
 
   return 0;
 }

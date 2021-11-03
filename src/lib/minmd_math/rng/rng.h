@@ -14,23 +14,24 @@ typedef struct {
 } rng_t;
 
 
-rng_t *rng_init(int type, uint64_t seed)
+rng_t *rng_new(int type, uint64_t seed)
 {
   rng_t *r = (rng_t *) calloc(1, sizeof(rng_t));
   if (r == NULL) {
-    fprintf(stderr, "(rng_init) Error: no memory\n");
+    fprintf(stderr, "(rng_new) Error: no memory\n");
     exit(1);
   }
 
   r->type = type;
 
   if (type == RNG_TYPE_PCG) {
-    pcg32_random_t *pcg = pcg32_random_init(seed, 0);
+    pcg32_random_t *pcg = pcg32_random_new(seed, 0);
     r->rng = pcg;
   }
 
   return r;
 }
+
 
 uint32_t rng_uint32(rng_t *r)
 {
@@ -43,10 +44,12 @@ uint32_t rng_uint32(rng_t *r)
   }
 }
 
+
 double rng_rand01(rng_t *r)
 {
   return rng_uint32(r) / 4294967296.0;
 }
+
 
 /* return a normally distributed random number with zero mean and unit variance
  * using the ratio method
@@ -112,15 +115,17 @@ double rng_gamma(rng_t *r, double k)
   return x;
 }
 
+
 double rng_chisqr(rng_t *r, double k)
 {
   return 2*rng_gamma(r, k*0.5);
 }
 
-void rng_free(rng_t *r)
+
+void rng_delete(rng_t *r)
 {
   if (r->type == RNG_TYPE_PCG) {
-    pcg32_random_free( (pcg32_random_t *)(r->rng) );
+    pcg32_random_delete( (pcg32_random_t *)(r->rng) );
   }
   free(r);
 }

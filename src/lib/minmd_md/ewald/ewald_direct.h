@@ -4,7 +4,7 @@
 #include "ewald_basic.h"
 
 
-ewald_t *ewald_direct_init(ewald_param_t *param)
+ewald_t *ewald_direct_new(ewald_param_t *param)
 {
   ewald_t *ew;
   ewald_data_t *ew_data;
@@ -17,12 +17,13 @@ ewald_t *ewald_direct_init(ewald_param_t *param)
   ew->param->algo_param = NULL;
 
   /* initialize data */
-  ew->data = ewald_data_init(ew->param, NULL);
+  ew->data = ewald_data_new(ew->param, NULL);
+
   return ew;
 }
 
 
-INLINE void ewald_direct_free(ewald_t *ew)
+INLINE void ewald_direct_delete(ewald_t *ew)
 {
   if (ew->param->algo_param != NULL) {
     free(ew->param->algo_param);
@@ -32,7 +33,8 @@ INLINE void ewald_direct_free(ewald_t *ew)
   if (ew->data->algo_data != NULL) {
     free(ew->data->algo_data);
   }
-  free(ew->data);
+  ewald_data_delete(ew->data);
+
   free(ew);
 }
 

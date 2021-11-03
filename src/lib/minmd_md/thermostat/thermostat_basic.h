@@ -33,7 +33,7 @@ typedef struct {
 } thermostat_t;
 
 
-INLINE thermostat_data_t *thermostat_data_init(const thermostat_param_t *tsp,
+INLINE thermostat_data_t *thermostat_data_new(const thermostat_param_t *tsp,
     void *algo_data)
 {
   thermostat_data_t *tsd;
@@ -41,6 +41,13 @@ INLINE thermostat_data_t *thermostat_data_init(const thermostat_param_t *tsp,
   XNEW(tsd, 1);
   tsd->algo_data = algo_data;
 }
+
+
+INLINE void thermostat_data_delete(thermostat_data_t *tsd)
+{
+  free(tsd);
+}
+
 
 #endif /* THERMOSTAT_BASIC_H__ */
 

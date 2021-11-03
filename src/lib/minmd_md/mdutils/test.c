@@ -6,8 +6,8 @@ int main(void)
   real x[100][DIM];
   rng_t *rng;
 
-  rng = rng_init(0, 0);
-  rng_free(rng);
+  rng = rng_new(0, 0);
+  rng_delete(rng);
 
   return 0;
 }

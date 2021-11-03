@@ -64,11 +64,11 @@ void force_test(md_ocp_t *ocp)
 
 int main(void)
 {
-  md_ocp_t *ocp = md_ocp_init(&param);
+  md_ocp_t *ocp = md_ocp_new(&param);
 
   force_test(ocp);
 
-  md_ocp_free(ocp);
+  md_ocp_delete(ocp);
 
   return 0;
 }

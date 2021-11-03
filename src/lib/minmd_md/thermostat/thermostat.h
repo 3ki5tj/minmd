@@ -4,14 +4,14 @@
 #include "thermostat_null.h"
 #include "thermostat_vrescaling.h"
 
-thermostat_t *thermostat_init(int type, thermostat_param_t *param)
+thermostat_t *thermostat_new(int type, thermostat_param_t *param)
 {
   if (type == THERMOSTAT_TYPE_NULL) {
-    return thermostat_null_init(param);
+    return thermostat_null_new(param);
   } else if (type == THERMOSTAT_TYPE_VRESCALING) {
-    return thermostat_vrescaling_init(param);
+    return thermostat_vrescaling_new(param);
   } else {
-    fprintf(stderr, "Error: thermostat_init() does not support thermostat type %d\n", type);
+    fprintf(stderr, "Error: thermostat_new() does not support thermostat type %d\n", type);
     return NULL;
   }
 }
@@ -30,14 +30,14 @@ real thermostat_apply(thermostat_t *ts)
 }
 
 
-real thermostat_free(thermostat_t *ts)
+real thermostat_delete(thermostat_t *ts)
 {
   if (ts->type == THERMOSTAT_TYPE_NULL) {
-    thermostat_null_free(ts);
+    thermostat_null_delete(ts);
   } else if (ts->type == THERMOSTAT_TYPE_VRESCALING) {
-    thermostat_vrescaling_free(ts);
+    thermostat_vrescaling_delete(ts);
   } else {
-    fprintf(stderr, "Error: thermostat_free() does not support thermostat type %d\n", ts->type);
+    fprintf(stderr, "Error: thermostat_delete() does not support thermostat type %d\n", ts->type);
   }
 }
 

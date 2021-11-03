@@ -23,18 +23,18 @@ md_running_param_t equil_param = {
 
 int main(void)
 {
-  md_ocp_t *ocp = md_ocp_init(&param);
+  md_ocp_t *ocp = md_ocp_new(&param);
   md_ocp_run(ocp, &equil_param);
  
   /* here we replace the thermostat by switching to type THERMOSTAT_TYPE_NULL */
   thermostat_t *old_thermostat = ocp->thermostat;
-  ocp->thermostat = thermostat_init(THERMOSTAT_TYPE_NULL, old_thermostat->param);
-  thermostat_free(old_thermostat);
+  ocp->thermostat = thermostat_new(THERMOSTAT_TYPE_NULL, old_thermostat->param);
+  thermostat_delete(old_thermostat);
 
   printf("\n\nStarting testing energy conservation...\n");
   printf("Pay attention to etot_shifted\n");
   md_ocp_run(ocp, &equil_param);
-  md_ocp_free(ocp);
+  md_ocp_delete(ocp);
 
   return 0;
 }

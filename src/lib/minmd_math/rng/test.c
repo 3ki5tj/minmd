@@ -45,11 +45,11 @@ void test_rng_chisqr(rng_t *rng)
 
 int main(void)
 {
-  rng_t *rng = rng_init(0, time(NULL));
+  rng_t *rng = rng_new(0, time(NULL));
 
   test_rng_gauss(rng);
   test_rng_chisqr(rng);
 
-  rng_free(rng);
+  rng_delete(rng);
   return 0;
 }

@@ -20,11 +20,11 @@ void test_rng_dir(rng_t *rng)
 
 int main(void)
 {
-  rng_t *rng = rng_init(0, time(NULL));
+  rng_t *rng = rng_new(0, time(NULL));
 
   test_cross();
   test_rng_dir(rng);
 
-  rng_free(rng);
+  rng_delete(rng);
   return 0;
 }

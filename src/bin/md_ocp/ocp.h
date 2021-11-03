@@ -37,7 +37,7 @@ typedef struct {
   real pres_tail;
 } epot_vdw_data_t;
 
-epot_vdw_data_t *epot_vdw_data_init(real rc, int n, real rho)
+epot_vdw_data_t *epot_vdw_data_new(real rc, int n, real rho)
 {
   epot_vdw_data_t *epdata;
   XNEW(epdata, 1);
@@ -53,7 +53,7 @@ epot_vdw_data_t *epot_vdw_data_init(real rc, int n, real rho)
   return epdata;
 }
 
-void epot_vdw_data_free(epot_vdw_data_t *epdata)
+void epot_vdw_data_delete(epot_vdw_data_t *epdata)
 {
   free(epdata);
 }
@@ -65,7 +65,7 @@ typedef struct {
   real virial;
 } epot_charge_data_t;
 
-epot_charge_data_t *epot_charge_data_init(real rc, int n, real rho)
+epot_charge_data_t *epot_charge_data_new(real rc, int n, real rho)
 {
   epot_charge_data_t *epdata;
   XNEW(epdata, 1);
@@ -77,7 +77,7 @@ epot_charge_data_t *epot_charge_data_init(real rc, int n, real rho)
   return epdata;
 }
 
-void epot_charge_data_free(epot_charge_data_t *epdata)
+void epot_charge_data_delete(epot_charge_data_t *epdata)
 {
   free(epdata);
 }
@@ -92,7 +92,7 @@ typedef struct {
   epot_charge_data_t *charge;
 } epot_data_t;
 
-epot_data_t *epot_data_init(real rc, int n, real rho)
+epot_data_t *epot_data_new(real rc, int n, real rho)
 {
   epot_data_t *epdata;
   XNEW(epdata, 1);
@@ -100,8 +100,8 @@ epot_data_t *epot_data_init(real rc, int n, real rho)
   epdata->epot = 0;
   epdata->epot_shifted = 0;
   epdata->virial = 0;
-  epdata->vdw = epot_vdw_data_init(rc, n, rho);
-  epdata->charge = epot_charge_data_init(rc, n, rho);
+  epdata->vdw = epot_vdw_data_new(rc, n, rho);
+  epdata->charge = epot_charge_data_new(rc, n, rho);
 
   return epdata;
 }
@@ -113,10 +113,10 @@ void epot_data_aggregate(epot_data_t *epdata)
   epdata->virial = epdata->vdw->virial + epdata->charge->virial;
 }
 
-void epot_data_free(epot_data_t *epdata)
+void epot_data_delete(epot_data_t *epdata)
 {
-  epot_vdw_data_free(epdata->vdw);
-  epot_charge_data_free(epdata->charge);
+  epot_vdw_data_delete(epdata->vdw);
+  epot_charge_data_delete(epdata->charge);
   free(epdata);
 }
 
@@ -128,19 +128,19 @@ typedef struct {
 } md_ocp_stat_t;
 
 
-md_ocp_stat_t *md_ocp_stat_init(void)
+md_ocp_stat_t *md_ocp_stat_new(void)
 {
   md_ocp_stat_t *stat;
   XNEW(stat, 1);
-  stat->ekin_accum = stat_accum_init();
-  stat->epot_accum = stat_accum_init();
+  stat->ekin_accum = stat_accum_new();
+  stat->epot_accum = stat_accum_new();
   return stat;
 }
 
-void md_ocp_stat_free(md_ocp_stat_t *stat)
+void md_ocp_stat_delete(md_ocp_stat_t *stat)
 {
-  stat_accum_free(stat->ekin_accum);
-  stat_accum_free(stat->epot_accum);
+  stat_accum_delete(stat->ekin_accum);
+  stat_accum_delete(stat->epot_accum);
   free(stat);
 }
 
@@ -185,7 +185,7 @@ typedef struct {
 void md_ocp_init_face_centered_lattice(int, real, real (*)[DIM], rng_t *);
 real md_ocp_force(md_ocp_t *);
 
-md_ocp_t *md_ocp_init(md_ocp_param_t *param)
+md_ocp_t *md_ocp_new(md_ocp_param_t *param)
 {
   md_ocp_t *ocp;
   int i, n = param->n;
@@ -203,9 +203,9 @@ md_ocp_t *md_ocp_init(md_ocp_param_t *param)
   ocp->rc = (param->rc_def < ocp->l*0.5) ? param->rc_def : ocp->l*0.5;
 
   /* initialize the potential energy */
-  ocp->epot_data = epot_data_init(ocp->rc, n, ocp->rho);
+  ocp->epot_data = epot_data_new(ocp->rc, n, ocp->rho);
 
-  ocp->rng = rng_init(0, 0);
+  ocp->rng = rng_new(0, 0);
 
   XNEW(ocp->mass, n);
   for (i = 0; i < n; i++) {
@@ -237,7 +237,7 @@ md_ocp_t *md_ocp_init(md_ocp_param_t *param)
     .x = ocp->x,
     .f = ocp->f,
   };
-  ocp->ew = ewald_init(EWALD_TYPE_DIRECT, &ewp);
+  ocp->ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
 
   md_ocp_force(ocp);
 
@@ -259,27 +259,27 @@ md_ocp_t *md_ocp_init(md_ocp_param_t *param)
     .v = ocp->v,
     .algo_param = &vrp,
   };
-  ocp->thermostat = thermostat_init(param->thermostat_type, &ts_param);
+  ocp->thermostat = thermostat_new(param->thermostat_type, &ts_param);
 
   /* initialize the statistical accumulators */
-  ocp->stat = md_ocp_stat_init();
+  ocp->stat = md_ocp_stat_new();
 
   return ocp;
 }
 
 
-void md_ocp_free(md_ocp_t *ocp)
+void md_ocp_delete(md_ocp_t *ocp)
 {
-  ewald_free(ocp->ew);
-  thermostat_free(ocp->thermostat);
-  md_ocp_stat_free(ocp->stat);
+  ewald_delete(ocp->ew);
+  thermostat_delete(ocp->thermostat);
+  md_ocp_stat_delete(ocp->stat);
   free(ocp->mass);
   free(ocp->charge);
   free(ocp->x);
   free(ocp->v);
   free(ocp->f);
-  epot_data_free(ocp->epot_data);
-  rng_free(ocp->rng);
+  epot_data_delete(ocp->epot_data);
+  rng_delete(ocp->rng);
   free(ocp);
 }
 

@@ -32,7 +32,7 @@ md_running_param_t prod_param = {
 
 int main(void)
 {
-  md_ocp_t *ocp = md_ocp_init(&param);
+  md_ocp_t *ocp = md_ocp_new(&param);
 
   /* equilibration run */
   md_ocp_run(ocp, &equil_param);
@@ -42,7 +42,7 @@ int main(void)
   md_ocp_run(ocp, &prod_param);
   md_ocp_print_stat(ocp);
 
-  md_ocp_free(ocp);
+  md_ocp_delete(ocp);
 
   return 0;
 }

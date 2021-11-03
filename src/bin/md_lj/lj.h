@@ -37,7 +37,7 @@ typedef struct {
   real pres_tail;
 } lj_epot_data_t;
 
-lj_epot_data_t *lj_epot_data_init(real rc, int n, real rho)
+lj_epot_data_t *lj_epot_data_new(real rc, int n, real rho)
 {
   lj_epot_data_t *epdata;
   XNEW(epdata, 1);
@@ -53,7 +53,7 @@ lj_epot_data_t *lj_epot_data_init(real rc, int n, real rho)
   return epdata;
 }
 
-void lj_epot_data_free(lj_epot_data_t *epdata)
+void lj_epot_data_delete(lj_epot_data_t *epdata)
 {
   free(epdata);
 }
@@ -66,21 +66,21 @@ typedef struct {
 } md_lj_stat_t;
 
 
-md_lj_stat_t *md_lj_stat_init(void)
+md_lj_stat_t *md_lj_stat_new(void)
 {
   md_lj_stat_t *stat;
   XNEW(stat, 1);
-  stat->ekin_accum = stat_accum_init();
-  stat->epot_accum = stat_accum_init();
-  stat->vir_accum = stat_accum_init();
+  stat->ekin_accum = stat_accum_new();
+  stat->epot_accum = stat_accum_new();
+  stat->vir_accum = stat_accum_new();
   return stat;
 }
 
-void md_lj_stat_free(md_lj_stat_t *stat)
+void md_lj_stat_delete(md_lj_stat_t *stat)
 {
-  stat_accum_free(stat->ekin_accum);
-  stat_accum_free(stat->epot_accum);
-  stat_accum_free(stat->vir_accum);
+  stat_accum_delete(stat->ekin_accum);
+  stat_accum_delete(stat->epot_accum);
+  stat_accum_delete(stat->vir_accum);
   free(stat);
 }
 
@@ -124,7 +124,7 @@ typedef struct {
 void md_lj_init_face_centered_lattice(int, real, real (*)[DIM], rng_t *);
 real md_lj_force(md_lj_t *);
 
-md_lj_t *md_lj_init(md_lj_param_t *param)
+md_lj_t *md_lj_new(md_lj_param_t *param)
 {
   md_lj_t *lj;
   int i, n = param->n;
@@ -142,9 +142,9 @@ md_lj_t *md_lj_init(md_lj_param_t *param)
   lj->rc = (param->rc_def < lj->l*0.5) ? param->rc_def : lj->l*0.5;
 
   /* initialize the potential energy */
-  lj->epot_data = lj_epot_data_init(lj->rc, n, lj->rho);
+  lj->epot_data = lj_epot_data_new(lj->rc, n, lj->rho);
 
-  lj->rng = rng_init(0, 0);
+  lj->rng = rng_new(0, 0);
 
   XNEW(lj->mass, n);
   for (i = 0; i < n; i++) {
@@ -177,25 +177,25 @@ md_lj_t *md_lj_init(md_lj_param_t *param)
     .v = lj->v,
     .algo_param = &vrp,
   };
-  lj->thermostat = thermostat_init(param->thermostat_type, &ts_param);
+  lj->thermostat = thermostat_new(param->thermostat_type, &ts_param);
 
   /* initialize the statistical accumulators */
-  lj->stat = md_lj_stat_init();
+  lj->stat = md_lj_stat_new();
 
   return lj;
 }
 
 
-void md_lj_free(md_lj_t *lj)
+void md_lj_delete(md_lj_t *lj)
 {
-  thermostat_free(lj->thermostat);
-  md_lj_stat_free(lj->stat);
+  thermostat_delete(lj->thermostat);
+  md_lj_stat_delete(lj->stat);
   free(lj->mass);
   free(lj->x);
   free(lj->v);
   free(lj->f);
-  lj_epot_data_free(lj->epot_data);
-  rng_free(lj->rng);
+  lj_epot_data_delete(lj->epot_data);
+  rng_delete(lj->rng);
   free(lj);
 }
 

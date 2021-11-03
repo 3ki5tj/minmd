@@ -16,7 +16,7 @@ void init_velocities(int n, const real *mass, real (*v)[DIM], rng_t *rng)
 void test_vrescaling(int n, const real *mass, real (*v)[DIM])
 {
   /* velocity rescaling parameters */
-  rng_t *rng = rng_init(0, time(NULL));
+  rng_t *rng = rng_new(0, time(NULL));
   thermostat_vrescaling_param_t vr_param = {
     .rng = rng
   };
@@ -31,7 +31,7 @@ void test_vrescaling(int n, const real *mass, real (*v)[DIM])
     .algo_param = &vr_param
   };
 
-  thermostat_t *ts = thermostat_init(THERMOSTAT_TYPE_VRESCALING, &param);
+  thermostat_t *ts = thermostat_new(THERMOSTAT_TYPE_VRESCALING, &param);
 
   init_velocities(n, mass, v, rng);
  
@@ -41,8 +41,8 @@ void test_vrescaling(int n, const real *mass, real (*v)[DIM])
     printf("k %d, ek %g vs %g\n", k, ek, 0.5 * param.n_dof * param.tp);
   }
 
-  thermostat_free(ts);
-  rng_free(rng);
+  thermostat_delete(ts);
+  rng_delete(rng);
 }
 
 

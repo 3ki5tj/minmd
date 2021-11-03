@@ -2,12 +2,18 @@
 #define SHAKE_H__
 
 
-constraint_t *shake_init(constraint_param_t *param)
+typedef struct {
+  int itmax; /* maximum number of iterations */
+} shake_param_t;
+
+
+constraint_t *shake_new(constraint_param_t *param)
 {
+
 }
 
 
-void shake_free(constraint_t *cs)
+void shake_delete(constraint_t *cs)
 {
 }
 

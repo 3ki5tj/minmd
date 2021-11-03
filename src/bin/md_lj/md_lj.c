@@ -31,7 +31,7 @@ md_running_param_t prod_param = {
 
 int main(void)
 {
-  md_lj_t *lj = md_lj_init(&param);
+  md_lj_t *lj = md_lj_new(&param);
 
   /* equilibration run */
   md_lj_run(lj, &equil_param);
@@ -40,7 +40,7 @@ int main(void)
   md_lj_run(lj, &prod_param);
   md_lj_print_stat(lj);
 
-  md_lj_free(lj);
+  md_lj_delete(lj);
 
   return 0;
 }

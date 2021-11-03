@@ -4,12 +4,12 @@
 
 #include "ewald_direct.h"
 
-ewald_t *ewald_init(int type, ewald_param_t *param)
+ewald_t *ewald_new(int type, ewald_param_t *param)
 {
   if (type == EWALD_TYPE_DIRECT) {
-    return ewald_direct_init(param);
+    return ewald_direct_new(param);
   } else {
-    fprintf(stderr, "Error: ewald_init() does not support type %d\n", type);
+    fprintf(stderr, "Error: ewald_new() does not support type %d\n", type);
     return NULL;
   }
 }
@@ -26,12 +26,12 @@ real ewald_force(ewald_t *ew, ewald_force_options_t *ewf_opt)
 }
 
 
-real ewald_free(ewald_t *ew)
+real ewald_delete(ewald_t *ew)
 {
   if (ew->type == EWALD_TYPE_DIRECT) {
-    ewald_direct_free(ew);
+    ewald_direct_delete(ew);
   } else {
-    fprintf(stderr, "Error: ewald_free() does not support type %d\n", ew->type);
+    fprintf(stderr, "Error: ewald_delete() does not support type %d\n", ew->type);
   }
 }
 

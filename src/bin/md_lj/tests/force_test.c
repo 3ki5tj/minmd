@@ -63,11 +63,11 @@ void force_test(md_lj_t *lj)
 
 int main(void)
 {
-  md_lj_t *lj = md_lj_init(&param);
+  md_lj_t *lj = md_lj_new(&param);
 
   force_test(lj);
 
-  md_lj_free(lj);
+  md_lj_delete(lj);
 
   return 0;
 }

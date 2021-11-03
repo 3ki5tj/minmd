@@ -15,7 +15,7 @@ typedef struct {
   uint64_t inc;
 } pcg32_random_t;
 
-pcg32_random_t *pcg32_random_init(uint64_t seed, uint64_t inc)
+pcg32_random_t *pcg32_random_new(uint64_t seed, uint64_t inc)
 {
   pcg32_random_t *r = (pcg32_random_t *) malloc(sizeof(pcg32_random_t));
   if (r == NULL) {
@@ -38,6 +38,13 @@ pcg32_random_t *pcg32_random_init(uint64_t seed, uint64_t inc)
   return r;
 }
 
+
+void pcg32_random_delete(pcg32_random_t *r)
+{
+  free(r);
+}
+
+
 uint32_t pcg32_random_uint32(pcg32_random_t* pcg)
 {
   uint64_t oldstate = pcg->state;
@@ -47,11 +54,6 @@ uint32_t pcg32_random_uint32(pcg32_random_t* pcg)
   uint32_t xorshifted = ((oldstate >> 18u) ^ oldstate) >> 27u;
   uint32_t rot = oldstate >> 59u;
   return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
-}
-
-void pcg32_random_free(pcg32_random_t *pcg)
-{
-  free(pcg);
 }
 
 

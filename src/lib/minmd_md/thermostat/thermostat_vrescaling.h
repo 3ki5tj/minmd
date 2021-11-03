@@ -18,7 +18,24 @@ typedef struct {
 } thermostat_vrescaling_data_t;
 
 
-thermostat_t *thermostat_vrescaling_init(thermostat_param_t *param)
+INLINE thermostat_vrescaling_data_t *thermostat_vrescaling_data_new(
+    const thermostat_param_t *param)
+{
+  thermostat_vrescaling_data_t *vrd;
+  XNEW(vrd, 1);
+  vrd->halfkt = 0.5 * param->boltz * param->tp;
+  vrd->expndt = exp(-param->dt);
+  return vrd;
+}
+
+
+INLINE void thermostat_vrescaling_data_delete(thermostat_vrescaling_data_t *vsd)
+{
+  free(vsd);
+}
+
+
+thermostat_t *thermostat_vrescaling_new(thermostat_param_t *param)
 {
   thermostat_t *ts;
 
@@ -30,22 +47,21 @@ thermostat_t *thermostat_vrescaling_init(thermostat_param_t *param)
   XCLONE(ts->param->algo_param, param->algo_param, sizeof(thermostat_vrescaling_param_t));
 
   /* initialize data */
-  thermostat_vrescaling_data_t *vr_data;
-  XNEW(vr_data, 1);
-  vr_data->halfkt = 0.5 * param->boltz * param->tp;
-  vr_data->expndt = exp(-param->dt);
-  ts->data = thermostat_data_init(ts->param, vr_data);
+  thermostat_vrescaling_data_t *vrd = thermostat_vrescaling_data_new(ts->param);
+  ts->data = thermostat_data_new(ts->param, vrd);
 
   return ts;
 }
 
 
-void thermostat_vrescaling_free(thermostat_t *ts)
+void thermostat_vrescaling_delete(thermostat_t *ts)
 {
   free(ts->param->algo_param);
   free(ts->param);
-  free(ts->data->algo_data);
-  free(ts->data);
+
+  thermostat_vrescaling_data_delete((thermostat_vrescaling_data_t *)ts->data->algo_data);
+  thermostat_data_delete(ts->data);
+
   free(ts);
 }
 
@@ -78,6 +94,7 @@ real thermostat_vrescaling_apply(thermostat_t *ts)
   }
   return (real) ek2;
 }
+
 
 #endif /* THERMOSTAT_VRESCALING_H__ */
 
