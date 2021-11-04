@@ -2,13 +2,19 @@
 #define CONSTRAINT_PAIRLIST_H__
 
 
-#include "def.h"
+#include "utils.h"
+
+
+typedef struct {
+  int i; /* index of the first atom */
+  int j; /* index of the second atom */
+  real dist; /* distance between the two atoms */
+} constraint_pair_param_t;
 
 
 typedef struct {
   int n;
-  int (*ids)[2]; /* the indicies of the two involved atoms */
-  double *dist; /* distance between the two atoms */
+  constraint_pair_param_t *pr;
 } constraint_pairlist_t;
 
 
@@ -18,8 +24,7 @@ INLINE constraint_pairlist_t *constraint_pairlist_new(int n)
 
   XNEW(pl, 1);
   pl->n = n;
-  XNEW(pl->ids, n);
-  XNEW(pl->dist, n);
+  XNEW(pl->pr, n);
   return pl;
 }
 
@@ -29,19 +34,18 @@ INLINE constraint_pairlist_t *constraint_pairlist_clone(constraint_pairlist_t *s
   constraint_pairlist_t *dest = constraint_pairlist_new(src->n);
 
   /* copy the pair lists */
-  memmove(dest->ids, src->ids, src->n*sizeof(src->id[0]));
-  memmove(dest->dist, src->dist, src->n*sizeof(src->dist[0]));
+  memmove(dest->pr, src->pr, src->n*sizeof(src->pr[0]));
 
   return dest;
 }
 
 
-INLINE void constraint_pairlist_delete(constraint_pairlist_t *pr)
+INLINE void constraint_pairlist_delete(constraint_pairlist_t *pl)
 {
-  free(pl->id);
-  free(pl->dist);
+  free(pl->pr);
   free(pl);
 }
 
 
 #endif /* CONSTRAINT_PAIRLIST_H__ */
+
