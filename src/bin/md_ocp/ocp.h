@@ -257,7 +257,7 @@ md_ocp_t *md_ocp_new(md_ocp_param_t *param)
     .boltz = 1,
     .mass = ocp->mass,
     .v = ocp->v,
-    .algo_param = &vrp,
+    .iparam = &vrp,
   };
   ocp->thermostat = thermostat_new(param->thermostat_type, &ts_param);
 

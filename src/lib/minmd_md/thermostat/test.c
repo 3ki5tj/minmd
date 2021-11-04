@@ -28,7 +28,7 @@ void test_vrescaling(int n, const real *mass, real (*v)[DIM])
     .boltz = 1.0,
     .mass = mass,
     .v = v,
-    .algo_param = &vr_param
+    .iparam = &vr_param
   };
 
   thermostat_t *ts = thermostat_new(THERMOSTAT_TYPE_VRESCALING, &param);

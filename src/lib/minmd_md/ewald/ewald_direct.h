@@ -14,7 +14,7 @@ ewald_t *ewald_direct_new(ewald_param_t *param)
 
   /* clone parameters */
   XCLONE(ew->param, param, sizeof(*param));
-  ew->param->algo_param = NULL;
+  ew->param->iparam = NULL;
 
   /* initialize data */
   ew->data = ewald_data_new(ew->param, NULL);
@@ -25,13 +25,13 @@ ewald_t *ewald_direct_new(ewald_param_t *param)
 
 INLINE void ewald_direct_delete(ewald_t *ew)
 {
-  if (ew->param->algo_param != NULL) {
-    free(ew->param->algo_param);
+  if (ew->param->iparam != NULL) {
+    free(ew->param->iparam);
   }
   free(ew->param);
 
-  if (ew->data->algo_data != NULL) {
-    free(ew->data->algo_data);
+  if (ew->data->idata != NULL) {
+    free(ew->data->idata);
   }
   ewald_data_delete(ew->data);
 

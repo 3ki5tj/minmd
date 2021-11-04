@@ -12,7 +12,7 @@ typedef struct {
   double boltz;
   const real *mass;
   real (*v)[DIM];
-  void *algo_param; /* algorithm-specific parameters */
+  void *iparam; /* algorithm-specific parameters */
 } thermostat_param_t;
 
 enum {
@@ -23,7 +23,7 @@ enum {
 };
 
 typedef struct {
-  void *algo_data;
+  void *idata;
 } thermostat_data_t;
 
 typedef struct {
@@ -34,12 +34,12 @@ typedef struct {
 
 
 INLINE thermostat_data_t *thermostat_data_new(const thermostat_param_t *tsp,
-    void *algo_data)
+    void *idata)
 {
   thermostat_data_t *tsd;
 
   XNEW(tsd, 1);
-  tsd->algo_data = algo_data;
+  tsd->idata = idata;
 }
 
 

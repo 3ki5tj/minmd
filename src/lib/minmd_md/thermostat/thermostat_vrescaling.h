@@ -44,7 +44,7 @@ thermostat_t *thermostat_vrescaling_new(thermostat_param_t *param)
 
   /* clone parameters */
   XCLONE(ts->param, param, sizeof(*param));
-  XCLONE(ts->param->algo_param, param->algo_param, sizeof(thermostat_vrescaling_param_t));
+  XCLONE(ts->param->iparam, param->iparam, sizeof(thermostat_vrescaling_param_t));
 
   /* initialize data */
   thermostat_vrescaling_data_t *vrd = thermostat_vrescaling_data_new(ts->param);
@@ -56,10 +56,10 @@ thermostat_t *thermostat_vrescaling_new(thermostat_param_t *param)
 
 void thermostat_vrescaling_delete(thermostat_t *ts)
 {
-  free(ts->param->algo_param);
+  free(ts->param->iparam);
   free(ts->param);
 
-  thermostat_vrescaling_data_delete((thermostat_vrescaling_data_t *)ts->data->algo_data);
+  thermostat_vrescaling_data_delete((thermostat_vrescaling_data_t *)ts->data->idata);
   thermostat_data_delete(ts->data);
 
   free(ts);
@@ -69,9 +69,9 @@ void thermostat_vrescaling_delete(thermostat_t *ts)
 real thermostat_vrescaling_apply(thermostat_t *ts)
 {
   thermostat_param_t *tsp = ts->param;
-  thermostat_vrescaling_param_t *vrp = (thermostat_vrescaling_param_t *) tsp->algo_param;
+  thermostat_vrescaling_param_t *vrp = (thermostat_vrescaling_param_t *) tsp->iparam;
   thermostat_data_t *tsd = ts->data;
-  thermostat_vrescaling_data_t *vrd = (thermostat_vrescaling_data_t *) tsd->algo_data;
+  thermostat_vrescaling_data_t *vrd = (thermostat_vrescaling_data_t *) tsd->idata;
   double dt = tsp->dt,
          c = vrd->expndt,
          halfkt = vrd->halfkt,

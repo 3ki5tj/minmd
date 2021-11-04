@@ -175,7 +175,7 @@ md_lj_t *md_lj_new(md_lj_param_t *param)
     .boltz = 1,
     .mass = lj->mass,
     .v = lj->v,
-    .algo_param = &vrp,
+    .iparam = &vrp,
   };
   lj->thermostat = thermostat_new(param->thermostat_type, &ts_param);
 

@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# for manually compiling test.c
+# quick and dirty way of compiling test.c
 gcc -g test.c -o test \
   -I../../../../debug \
   -I../../minmd_basic/def \

@@ -17,7 +17,7 @@ thermostat_t *thermostat_null_new(thermostat_param_t *param)
 
   /* clone parameters */
   XCLONE(ts->param, param, sizeof(*param));
-  ts->param->algo_param = NULL;
+  ts->param->iparam = NULL;
 
   /* initialize data */
   ts->data = thermostat_data_new(ts->param, NULL);
