@@ -1,11 +1,17 @@
 #include "ewald.h"
 
-/* a single ion immersed in an oppositely-charged background */
+
+
+/* test the direct Ewald method on the one-particle one-component plasma system
+ * which is a single ion immersed in an oppositely-charged background */
 void test_ewald_direct_ocp1(void)
 {
+  /* system specification */
   real charge[1] = {1.0};
   real x[1][DIM] = {{0.1, 0.2, 0.3}};
   real f[1][DIM] = {{0.0, 0.0, 0.0}};
+
+  /* generic Ewald parameters */
   ewald_param_t ewp = {
     .n = 1,
     .box = {1.0, 1.0, 1.0},
@@ -16,38 +22,53 @@ void test_ewald_direct_ocp1(void)
     .x = x,
     .f = f,
   };
-  ewald_t *ew;
+  /* create a new Ewald object */
+  ewald_t *ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
 
-  ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
+  /* clear the force at the beginning of step */
   ewald_force_options_t ewf_opt = {
     .zero_forces = 1,
   };
+
+  /* get the electrostatic energy from the Ewald method */
   double ene = ewald_force(ew, &ewf_opt);
   printf("energy %.8f/2=%g, real %g, recip %g, self %g, background %g\n\n\n",
       ene*2, ene, ew->data->real_energy, ew->data->recip_energy,
       ew->data->self_energy, ew->data->background_energy);
+  
+  /* delete the Ewald object */
   ewald_delete(ew);
 }
 
 
 
-/* a pair of ions immersed in an oppositely-charged background */
-void test_ewald_direct_ocp2(void)
+/* test the direct Ewald method on the two-ion system
+ * which consists of a pair of oppositely-charged ions
+ *
+ * Test if the force matches the energy */
+void test_ewald_direct_two_ions(void)
 {
+  /* system specification */
   real charge[2] = {1.0, -1.0};
   real x[2][DIM] = {{0.1, 0.0, 0.0}, {0.5, 0.0, 0.0}};
   real f[2][DIM] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+
+  /* generic Ewald parameters */
   ewald_param_t ewp = {
     .n = 2,
     .box = {1.0, 1.0, 1.0},
-    .sigma = 0.0, /* choose automatically */
+    .sigma = 0.0, /* let the algorithm choose automatically */
     .tol = 1e-7,
     .kee = 1.0,
     .charge = charge,
     .x = x,
     .f = f,
   };
+  /* create a new Ewald object */
   ewald_t *ew = ewald_new(EWALD_TYPE_DIRECT, &ewp);
+
+  /* since the electrostatic force is the only force for our system
+   * we need to zero it at the beginning of every step */
   ewald_force_options_t ewf_opt = {
     .zero_forces = 1,
   };
@@ -85,14 +106,19 @@ void test_ewald_direct_ocp2(void)
       (ereal2 - ereal1)/delta,
       (erecip2 - erecip1)/delta);
 
+  /* delete the Ewald object */
   ewald_delete(ew);
 }
 
 
 int main(void)
 {
+  /* test on the one-particle one-component plasma system */
   test_ewald_direct_ocp1();
-  test_ewald_direct_ocp2();
+
+  /* test on a system consisting of two oppositely-charged ions */
+  test_ewald_direct_two_ions();
+
   return 0;
 }
 

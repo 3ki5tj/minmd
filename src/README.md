@@ -21,6 +21,7 @@
  |      +- mdutils      utilities 
  |      +- thermostat   thermostats
  |      +- ewald        Ewald sum
+ |      +- constraint   constraint solvers
  |
  +- bin                 MD programs for different systems
     |
