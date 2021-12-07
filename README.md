@@ -72,6 +72,27 @@ valgrind ./test
 Various books and existing MD packages are helpful.
 
 ### MD Books
+
+#### Allen and Tildesley
+
+Computer Simulation of Liquids (2nd Edition, Jun 22, 2017)
+by Michael P. Allen and Dominic J. Tildesley
+
+Online version
+https://oxford.universitypressscholarship.com/view/10.1093/oso/9780198803195.001.0001/oso-9780198803195
+
+Companion website
+https://global.oup.com/booksites/content/9780198803195/
+
+Code:
+https://github.com/Allen-Tildesley/examples
+
+```
+git clone https://github.com/Allen-Tildesley/examples
+```
+
+#### Frenkel and Smit
+
 Understanding Molecular Simulation: From Algorithms to Applications (2nd Edition)
 by Daan Frenkel and Berend Smit, Academic Press
 

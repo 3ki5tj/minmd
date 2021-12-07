@@ -109,3 +109,4 @@ int main(void)
   rng_delete(rng);
   return 0;
 }
+
