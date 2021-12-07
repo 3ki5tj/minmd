@@ -140,7 +140,7 @@ void constraint_shake_delete(constraint_t *cs)
 }
 
 
-/* SHAKE algorithm */
+/* SHAKE algorithm for coordinates */
 void constraint_shake_coordinates(constraint_t *cs)
 {
   constraint_param_t *csp = cs->param;
@@ -165,7 +165,7 @@ void constraint_shake_coordinates(constraint_t *cs)
       dist_ref2 = prd->dist_ref2;
       dx0 = prd->dx;
 
-      /* TODO: replace to the PBC version */
+      /* TODO: replace by the PBC version */
       vec_diff(dx, x1[i], x1[j]);
       dist2 = vec_sqr(dx);
       dev = dist_ref2 - dist2;
@@ -181,7 +181,7 @@ void constraint_shake_coordinates(constraint_t *cs)
       vec_sinc(x1[j], dx0, -dev*prd->jmass);
     }
     
-    /* one iteration finished */
+    /* one iteration done */
     if (maxdev < shp->ctol) {
       break;
     }
@@ -189,7 +189,7 @@ void constraint_shake_coordinates(constraint_t *cs)
 }
 
 
-/* RATTLE algorithm */
+/* RATTLE algorithm for velocities */
 void constraint_shake_velocities(constraint_t *cs)
 {
   constraint_param_t *csp = cs->param;

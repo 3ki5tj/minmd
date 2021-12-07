@@ -1,6 +1,6 @@
 SOURCES = $(wildcard *.c)
 BINARIES = $(patsubst %.c,%, $(SOURCES))
-DEPENDENCIES = $(wildcard *.h) Makefile
+DEPENDENCIES = $(wildcard *.h) $(wildcard ../*.h) Makefile
 
 CC = gcc
 CFLAGS = -O0 -g -Wall

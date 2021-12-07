@@ -43,7 +43,7 @@ INLINE void constraint_data_delete(constraint_data_t *csd)
 enum {
   CONSTRAINT_TYPE_NULL = 0,
   CONSTRAINT_TYPE_SHAKE = 1,
-  /* CONSTRAINT_TYPE_SETTLE, */
+  CONSTRAINT_TYPE_SETTLE,
   CONSTRAINT_TYPE_COUNT
 };
 

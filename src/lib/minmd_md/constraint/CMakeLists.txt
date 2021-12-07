@@ -15,7 +15,9 @@ target_include_directories(${PROJECT_NAME}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-# test program
-add_executable(test_${PROJECT_NAME} test.c)
-target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} -lm)
+# test programs
+add_subdirectory(tests)
+
+#add_executable(test_${PROJECT_NAME} test.c)
+#target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} -lm)
 
